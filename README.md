@@ -10,9 +10,13 @@ Key Features
 
 - Customizable voice options (switch between different Mandarin speakers)
 
+- Adjustable speech speed  (-50% slower to 100% faster, 0% for normal speed)
+
 - Flexible playback settings: repeat count adjustment, infinite loop, and custom playback interval
 
 - Clean and intuitive graphical user interface (GUI) – no coding required
+
+- Automatic temporary file management (cleans up unused audio files to save disk space)
 
 System Requirements
 
@@ -56,19 +60,21 @@ How to Use
 
 3. Select your preferred voice from the Voice dropdown menu
 
-4. Click Process Text & Generate Audio (wait for 2-5 seconds, depending on text length)
+4. Adjust speech speed using the slider (-50% to 100%, 0% is normal speed)
 
-5. After processing:
+5. Click Process Text & Generate Audio (wait for 2-5 seconds, depending on text length)
+
+6. After processing:
         Use ▶ Play/⏸ Pause/■ Stop buttons to control full-text playback
 
-6. Double-click any sentence in the right list to play that single sentence
+7. Double-click any sentence in the right list to play that single sentence
 
-7. Optional settings:
+8. Optional settings:
         Mode: Switch between "Single" (play selected sentence repeatedly) or "Full" (play entire text)
 
-8. Repeat: Set playback count (check "Loop" for infinite playback)
+9. Repeat: Set playback count (check "Loop" for infinite playback)
 
-9. Interval: Adjust the interval between repeated playbacks (in milliseconds)
+10. Interval: Adjust the interval between repeated playbacks (in milliseconds)
 
 Important Notes
 
