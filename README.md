@@ -6,6 +6,8 @@ Key Features
 
 - Convert any Mandarin text to natural-sounding audio
 
+- Image-to-Text Recognition: Extract clean Mandarin text from images (automatically filters non-Chinese characters and retains only Chinese characters + standard punctuation)
+
 - Dual playback modes: full-text playback or single-sentence playback (double-click to play)
 
 - Customizable voice options (switch between different Mandarin speakers)
@@ -54,6 +56,8 @@ For macOS Users
 
 How to Use
 
+Basic Text-to-Speech
+
 1. Launch the Mandarin TTS Tool
 
 2. In the left text box, input or paste the Mandarin text you want to convert
@@ -76,6 +80,25 @@ How to Use
 
 10. Interval: Adjust the interval between repeated playbacks (in milliseconds)
 
+Image-to-Text Recognition
+1. Click Select Image for OCR in the status bar (top-right)
+
+2. Choose an image file (supports .png, .jpg, .jpeg, .bmp, .gif) containing Mandarin text
+
+3. Wait for recognition (a progress window will appear)
+
+4. The extracted text (cleaned to retain only Chinese characters and punctuation) will automatically populate the left text box
+
+5. Follow steps 3-6 in the "Basic Text-to-Speech" section to generate audio
+
+Optional Settings
+1. Mode: Switch between "Single" (play selected sentence repeatedly) or "Full" (play entire text)
+
+2. Repeat: Set playback count (check "Loop" for infinite playback)
+
+3. Interval: Adjust the interval between repeated playbacks (in milliseconds)
+
+
 Important Notes
 
 - After switching to a new voice, you must click Process Text & Generate Audio again for the change to take effect
@@ -93,6 +116,8 @@ Troubleshooting
 - App crashes on launch: Ensure your system meets the minimum requirements; re-download the latest version from Releases
 
 - Slow processing: Reduce text length or close other heavy applications
+
+- Image recognition failures: Try with a higher-quality image or manually type text into the input box
 
 Contact
 
