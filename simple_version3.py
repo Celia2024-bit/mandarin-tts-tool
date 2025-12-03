@@ -161,6 +161,25 @@ class EdgeTTS_GUI:
         )
         self.voice_combobox.pack(side=tk.LEFT, padx=5)
         self.voice_combobox.bind("<<ComboboxSelected>>", self.on_voice_change)
+        
+        # ========== ADD SPEED CONTROL HERE (after line 86) ==========
+        # Speed control
+        self.speed_label = ttk.Label(self.config_frame, text="Speed:", font=("Segoe UI", 10))
+        self.speed_label.pack(side=tk.LEFT, padx=(20, 3))
+        self.speed_var = tk.StringVar(value="0")  # Default: normal speed
+        self.speed_slider = ttk.Scale(
+        self.config_frame,
+        from_=-50,  # -50% slower
+        to=100,     # +100% faster
+        orient=tk.HORIZONTAL,
+        length=120,
+        variable=self.speed_var,
+        command=self.on_speed_change
+        )
+        self.speed_slider.pack(side=tk.LEFT, padx=3)
+        self.speed_value_label = ttk.Label(self.config_frame, text="0%", font=("Segoe UI", 9), width=5)
+        self.speed_value_label.pack(side=tk.LEFT, padx=3)
+        # ========== END OF SPEED CONTROL ==========
 
         # 播放按钮
         self.play_btn = ttk.Button(self.config_frame, text="▶ Play", command=self.play_audio, state=tk.DISABLED)
@@ -336,6 +355,20 @@ class EdgeTTS_GUI:
         current_mode = "Single Sentence" if self.repeat_mode_var.get() == "single" else "Full Text"
         audio_status = "Available" if self.check_audio_available() else "Not Available"
         self.update_status(f"Status: Ready | Play Type: {current_mode} | Audio Status: {audio_status}")
+        
+    def on_speed_change(self, value):
+        """Update speed display when slider moves"""
+        speed_val = int(float(value))
+        self.speed_var.set(str(speed_val))
+        self.speed_value_label.config(text=f"{speed_val:+d}%")
+        
+        # Invalidate existing audio (speed changed, need regeneration)
+        if self.full_audio_path or self.single_audio_path:
+            self.full_audio_path = None
+            self.single_audio_path = None
+            self.update_buttons()
+            mode_text = "Full Text" if self.repeat_mode_var.get() == "full" else "Single Sentence"
+            self.update_status(f"Status: Ready | Play Type: {mode_text} | Speed: {speed_val:+d}% | Audio invalidated (re-generate required)")
 
     def check_audio_available(self):
         """Check if corresponding audio exists for current mode and voice"""
@@ -370,6 +403,9 @@ class EdgeTTS_GUI:
         self.single_audio_path = None        # 重置单句音频路径
         self.selected_single_text = ""       # 重置选中的单句文本
         self.selected_single_idx = -1        # 重置选中的单句索引（彻底清除选中状态）
+        self.speed_var.set("0")
+        self.speed_value_label.config(text="0%")
+        self.speed_slider.set(0)
 
         # 5. 更新当前发言人
         self.selected_voice = new_voice
@@ -482,13 +518,16 @@ class EdgeTTS_GUI:
             # 文件名包含发言人标识，避免不同发言人音频混淆
             voice_tag = self.selected_voice.replace(" ", "_").replace("(", "").replace(")", "").replace(",", "")
             timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
-            audio_path = f"{output_dir}/full_text_{voice_tag}_{timestamp}.mp3"
-
+            # Get current speed value and format correctly
+            speed_val = int(float(self.speed_var.get()))
+            speed_str = f"{speed_val:+d}%"
+                
+            audio_path = f"{output_dir}/full_text_{voice_tag}_speed{speed_val}_{timestamp}.mp3"            
             # Generate TTS audio with current voice
             communicate = edge_tts.Communicate(
                 text=text,
                 voice=VOICE_DICT[self.selected_voice],
-                rate="+0%",
+                rate=speed_str,  # Use dynamic speed
                 pitch="+0Hz",
                 volume="+5%"
             )
@@ -543,17 +582,21 @@ class EdgeTTS_GUI:
             try:
                 output_dir = "./tts_output/sentences"
                 os.makedirs(output_dir, exist_ok=True)
-                # 文件名包含发言人+句子标识，确保与当前发言人绑定
                 voice_tag = self.selected_voice.replace(" ", "_").replace("(", "").replace(")", "").replace(",", "")
                 sentence_tag = self.selected_single_text[:20].replace(" ", "_").replace("。", "").replace("！", "").replace("？", "")
                 timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
-                audio_path = f"{output_dir}/sentence_{voice_tag}_{sentence_tag}_{timestamp}.mp3"
+                
+                # Get current speed value and format correctly
+                speed_val = int(float(self.speed_var.get()))
+                speed_str = f"{speed_val:+d}%"
+                
+                audio_path = f"{output_dir}/sentence_{voice_tag}_speed{speed_val}_{sentence_tag}_{timestamp}.mp3"
 
-                # Generate single sentence audio with current voice
+                # Generate single sentence audio with current voice AND SPEED
                 communicate = edge_tts.Communicate(
                     text=self.selected_single_text,
                     voice=VOICE_DICT[self.selected_voice],
-                    rate="+0%",
+                    rate=speed_str,  # Use dynamic speed
                     pitch="+0Hz",
                     volume="+5%"
                 )
