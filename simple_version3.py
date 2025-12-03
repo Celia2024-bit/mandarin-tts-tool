@@ -8,6 +8,7 @@ from datetime import datetime
 import pygame
 import re
 import threading
+import shutil
 
 # 定义发音人列表（英文标识）
 VOICE_DICT = {
@@ -394,6 +395,15 @@ class EdgeTTS_GUI:
 
     # ====================== 文本处理逻辑 ======================
     def process_text(self):
+    
+        output_dir = "./tts_output"
+        # 核心命令：先删除整个文件夹（含所有内容），再重建空文件夹（等价 rm -rf + mkdir）
+        if os.path.exists(output_dir):
+            shutil.rmtree(output_dir, ignore_errors=True)  # ignore_errors=True → 强制删除，忽略所有错误（文件占用、不存在等）
+        os.makedirs(output_dir, exist_ok=True)  # 重建空文件夹（exist_ok=True → 文件夹已存在也不报错）
+        self.update_status(f"Cleared all files in {output_dir} (force delete)")
+        
+    # ====================================================================
         if self.is_processing:
             messagebox.showinfo("Info", "Processing is already in progress! Please wait.")
             return
