@@ -20,7 +20,7 @@ jobs:
           
       - name: Build Windows EXE
         run: |
-          pyinstaller -F -w ./simple_version3.py --name "MandarinTTS-Windows"
+          pyinstaller -F -w ./mandarinTtsTool.py --name "MandarinTTS-Windows"
       
       - name: Upload Windows EXE
         uses: actions/upload-artifact@v4
@@ -51,7 +51,7 @@ jobs:
       - name: Build Mac 可执行文件
         run: |
           # 打包成 Mac 专用的.app 文件（去掉 -F 单文件参数，Mac 更稳定）
-          pyinstaller -w ./simple_version3.py --name "MandarinTTS-Mac"
+          pyinstaller -w ./mandarinTtsTool.py --name "MandarinTTS-Mac"
           
           # 生成 DMG 镜像（路径修正：指向.app 文件夹，之前可能漏了 .app 后缀）
           hdiutil create -volname "MandarinTTS" -srcfolder "dist/MandarinTTS-Mac.app" -ov -format UDZO MandarinTTS-Mac.dmg
