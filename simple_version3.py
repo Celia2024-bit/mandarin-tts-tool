@@ -355,21 +355,36 @@ class EdgeTTS_GUI:
         current_mode = "Single Sentence" if self.repeat_mode_var.get() == "single" else "Full Text"
         audio_status = "Available" if self.check_audio_available() else "Not Available"
         self.update_status(f"Status: Ready | Play Type: {current_mode} | Audio Status: {audio_status}")
-        
     def on_speed_change(self, value):
-        """Update speed display when slider moves"""
+        """Update speed display when slider moves and auto-regenerate if needed"""
         speed_val = int(float(value))
         self.speed_var.set(str(speed_val))
         self.speed_value_label.config(text=f"{speed_val:+d}%")
         
-        # Invalidate existing audio (speed changed, need regeneration)
-        if self.full_audio_path or self.single_audio_path:
-            self.full_audio_path = None
-            self.single_audio_path = None
-            self.update_buttons()
-            mode_text = "Full Text" if self.repeat_mode_var.get() == "full" else "Single Sentence"
-            self.update_status(f"Status: Ready | Play Type: {mode_text} | Speed: {speed_val:+d}% | Audio invalidated (re-generate required)")
-
+        # Stop playback if audio is currently playing
+        if self.is_playing or self.is_paused:
+            self.stop_audio()
+        
+        # If there was audio before, auto-regenerate with new speed
+        had_full_audio = self.full_audio_path is not None
+        had_single_audio = self.single_audio_path is not None
+        
+        # Invalidate old audio
+        self.full_audio_path = None
+        self.single_audio_path = None
+        self.update_buttons()
+        
+        mode_text = "Full Text" if self.repeat_mode_var.get() == "full" else "Single Sentence"
+        
+        # Auto-regenerate if user had generated audio before
+        if had_full_audio and self.text_input.get("1.0", tk.END).strip():
+            self.update_status(f"Status: Processing | Speed: {speed_val:+d}% | Auto-regenerating full audio...")
+            self.root.after(1000, self.process_text)  # Trigger regeneration after UI updates
+        elif had_single_audio and self.selected_single_text:
+            self.update_status(f"Status: Ready | Speed: {speed_val:+d}% | Double-click sentence to regenerate")
+        else:
+            self.update_status(f"Status: Ready | Play Type: {mode_text} | Speed: {speed_val:+d}% | Click 'Process' to generate audio")
+        
     def check_audio_available(self):
         """Check if corresponding audio exists for current mode and voice"""
         current_mode = self.repeat_mode_var.get()
@@ -428,10 +443,16 @@ class EdgeTTS_GUI:
             "Voice Changed Successfully",
             f"Switched to voice: {new_voice}\n\nImportant Notes:\n1. All previous audio files and sentence data are reset.\n2. Please click 'Process' to split text and generate full audio.\n3. Double-click a sentence in the list to generate single sentence audio."
         )
+        
+        self.speed_var.set("0")
+        self.speed_value_label.config(text="0%")
+        self.speed_slider.set(0)
 
     # ====================== 文本处理逻辑 ======================
     def process_text(self):
-    
+       # self.speed_var.set("0")
+        #self.speed_value_label.config(text="0%")
+        #self.speed_slider.set(0)
         output_dir = "./tts_output"
         # 核心命令：先删除整个文件夹（含所有内容），再重建空文件夹（等价 rm -rf + mkdir）
         if os.path.exists(output_dir):
