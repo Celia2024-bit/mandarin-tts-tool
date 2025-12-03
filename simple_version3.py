@@ -2,7 +2,7 @@
 import edge_tts
 import asyncio
 import tkinter as tk
-from tkinter import ttk, messagebox, scrolledtext
+from tkinter import ttk, messagebox, scrolledtext,Toplevel, Label
 import os
 from datetime import datetime
 import pygame
@@ -381,7 +381,6 @@ class EdgeTTS_GUI:
     def select_image_for_ocr(self):
         """Select image and call Baidu API for text recognition"""
         from tkinter import filedialog
-        
         # Open file selection dialog
         file_path = filedialog.askopenfilename(
             filetypes=[("Image Files", "*.png;*.jpg;*.jpeg;*.bmp;*.gif")]
@@ -392,6 +391,35 @@ class EdgeTTS_GUI:
             
         self.update_status("Status: Processing | Recognizing text from image...")
         self.root.update()
+        
+        # -------------------------- 新增：创建等待窗口 --------------------------
+        loading_window = Toplevel(self.root)
+        loading_window.title("Processing")
+        loading_window.geometry("300x100")
+        loading_window.resizable(False, False)
+        # 居中显示（优化：精准居中，避免偏移）
+        loading_window.update_idletasks()  # 刷新窗口状态
+        x = self.root.winfo_x() + (self.root.winfo_width() - loading_window.winfo_width()) // 2
+        y = self.root.winfo_y() + (self.root.winfo_height() - loading_window.winfo_height()) // 2
+        loading_window.geometry(f"+{x}+{y}")  # 固定居中位置
+
+        loading_window.grab_set()  # 模态锁定
+        self.root.update()  # 强制主窗口刷新，确保等待窗口立即显示
+
+        # 等待提示文本（添加背景色和内边距，增强可见性）
+        loading_label = Label(
+            loading_window,
+            text="Processing image, please wait...",
+            font=("Segoe UI", 11),
+            bg="white",  # 白色背景，避免透明/不可见
+            padx=20,
+            pady=10
+        )
+        loading_label.pack(expand=True, fill=tk.BOTH)  # 填充窗口，增强视觉效果
+
+        # 强制刷新等待窗口，确保文本和样式生效
+        loading_window.update()
+        # ------------------------------------------------------------------------
         
         try:
             # Initialize Baidu OCR client
@@ -432,6 +460,10 @@ class EdgeTTS_GUI:
         except Exception as e:
             self.update_status(f"Status: Error | Recognition failed: {str(e)}")
             messagebox.showerror("Recognition Error", f"Text recognition failed: {str(e)}")
+        
+        # -------------------------- 新增：关闭等待窗口 --------------------------
+        loading_window.destroy()
+        # ------------------------------------------------------------------------
         
     def on_mode_change(self):
         """Update button status and status display when play mode changes"""
