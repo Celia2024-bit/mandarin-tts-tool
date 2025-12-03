@@ -10,6 +10,7 @@ import re
 import threading
 import shutil
 
+
 # 定义发音人列表（英文标识）
 VOICE_DICT = {
     "Mandarin Female (Xiaoyi)": "zh-CN-XiaoyiNeural",
@@ -19,6 +20,25 @@ VOICE_DICT = {
     "Mandarin Female (Lingling)": "zh-CN-LinglingNeural",
     "Northeast Mandarin Female": "zh-CN-Liaoning-XiaobeiNeural"
 }
+
+# 百度OCR配置
+BAIDU_OCR_CONFIG = {
+    "APP_ID": "7298408",
+    "API_KEY": "NxM6ZNhq9mM5Ck3tPr5zMura",
+    "SECRET_KEY": "EZxvX4H54YSAHiPU61utysBOovGPlCZn"
+}
+
+# 安装百度OCR SDK（程序启动时检查）
+try:
+    import aip
+except ImportError:
+    import subprocess
+    import sys
+    subprocess.check_call([
+        sys.executable, "-m", "pip", "install", "baidu-aip",
+        "-i", "https://mirrors.aliyun.com/pypi/simple/"
+    ])
+from aip import AipOcr
 
 class EdgeTTS_GUI:
     def __init__(self, root):
@@ -242,6 +262,15 @@ class EdgeTTS_GUI:
             font=("Segoe UI", 9)
         )
         self.main_status.pack(side=tk.LEFT)
+        
+        self.ocr_btn = ttk.Button(
+            self.status_frame,  # 正确的状态栏容器
+            text="Select Image for OCR",
+            command=self.select_image_for_ocr
+        )
+        # 布局：放在状态栏文本右侧，添加间距（与原状态文本分开）
+        self.ocr_btn.pack(side=tk.RIGHT, padx=(40, 5)) 
+        
 
         # ====================== 主内容区（保持原有稳定布局，只美化） ======================
         self.main_content = ttk.Frame(root)
@@ -349,6 +378,61 @@ class EdgeTTS_GUI:
             self.interval_var.set("500")
             return 500
 
+    def select_image_for_ocr(self):
+        """Select image and call Baidu API for text recognition"""
+        from tkinter import filedialog
+        
+        # Open file selection dialog
+        file_path = filedialog.askopenfilename(
+            filetypes=[("Image Files", "*.png;*.jpg;*.jpeg;*.bmp;*.gif")]
+        )
+        
+        if not file_path:
+            return
+            
+        self.update_status("Status: Processing | Recognizing text from image...")
+        self.root.update()
+        
+        try:
+            # Initialize Baidu OCR client
+            client = AipOcr(
+                BAIDU_OCR_CONFIG["APP_ID"],
+                BAIDU_OCR_CONFIG["API_KEY"],
+                BAIDU_OCR_CONFIG["SECRET_KEY"]
+            )
+            
+            # Read image file
+            with open(file_path, 'rb') as f:
+                image = f.read()
+                
+            # Call general text recognition API
+            result = client.basicGeneral(image)
+            
+            # Extract recognition results
+            if "words_result" in result:
+                # Concatenate all recognized text first
+                raw_text = "\n".join([item["words"] for item in result["words_result"]])
+                
+                # Filter rule: Keep only Chinese characters ([\u4e00-\u9fa5]) and common Chinese punctuation (。，；：？！""''（）《》【】、—…·)
+                filtered_text = re.sub(r'[^\u4e00-\u9fa5。，；：？！""''（）《》【】、—…·]', '', raw_text)
+                
+                # Remove empty lines and blank content
+                filtered_lines = [line.strip() for line in filtered_text.split('\n') if line.strip()]
+                final_text = "\n".join(filtered_lines)
+                
+                # Clear existing text and insert filtered result
+                self.text_input.delete("1.0", tk.END)
+                self.text_input.insert(tk.END, final_text)
+                
+                self.update_status(f"Status: Ready | Recognition completed, total {len(filtered_lines)} lines of valid Chinese text")
+            else:
+                self.update_status(f"Status: Error | No text recognized - {result.get('error_msg', 'Unknown error')}")
+                messagebox.showwarning("Recognition Result", "No text found in the image")
+                
+        except Exception as e:
+            self.update_status(f"Status: Error | Recognition failed: {str(e)}")
+            messagebox.showerror("Recognition Error", f"Text recognition failed: {str(e)}")
+        
     def on_mode_change(self):
         """Update button status and status display when play mode changes"""
         self.update_buttons()
