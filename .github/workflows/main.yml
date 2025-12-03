@@ -3,7 +3,6 @@ name: Build Windows + Mac Installers
 on: workflow_dispatch  # 手动触发
 
 jobs:
-  # Windows 打包（完全保留你之前成功的逻辑，一字不动）
   build-windows:
     runs-on: windows-latest
     steps:
@@ -17,7 +16,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller edge-tts pygame
+          pip install pyinstaller edge-tts pygame baidu-aip
           
       - name: Build Windows EXE
         run: |
@@ -29,7 +28,6 @@ jobs:
           name: MandarinTTS-Windows
           path: dist/MandarinTTS-Windows.exe
 
-  # Mac 打包（只修复依赖安装命令，其余不变）
   build-mac:
     runs-on: macos-latest
     steps:
@@ -48,7 +46,7 @@ jobs:
       - name: Install Python 依赖（保留这一步，确保 pygame 安装成功）
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller edge-tts pygame
+          pip install pyinstaller edge-tts pygame baidu-aip
           
       - name: Build Mac 可执行文件
         run: |
