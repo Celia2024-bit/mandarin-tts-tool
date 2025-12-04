@@ -1,0 +1,64 @@
+graph TD
+    subgraph UI_Main 
+        A[Start_App] --> B{User_Action};
+        
+        B -- "Click: Process Text and Generate Audio" --> C[Call_TTS_Full];
+        B -- "Click: Sentence_in_List" --> R[Call_TTS_Single];
+        B -- "Click: Select_Image" --> D[Call_OCR];
+        B -- "Click: Play/Resume" --> E[Call_Play_Audio];
+     
+ 
+
+        C --> F(Launch_Full_Thread);
+        D --> G(Launch_OCR_Thread);
+
+        H(Full_TTS_Signal: Path+List) --> I[Update_Status];
+        I --> J[Populate_List];
+        J --> K[Set_Full_Path_&_Enable_Play];
+        K --> E; 
+
+       
+        
+    
+        R --> S1(Launch_Single_Thread);
+        
+        M(Single_TTS_Signal: Path) --> R1[Handle_Single_Play_Path];
+        R1 --> K; 
+        
+        L(OCR_Signal) --> M1[Load_Text_Input];
+        M1 --> N[Set_Ready_Status];
+    
+        E --> O[Load_Play];
+        O --> P{Finished?};
+        P --> Q[Reset_Buttons];
+    end
+
+    subgraph Background_Workers
+     
+        subgraph Thread_3_TTS_SINGLE
+            S1 --> S2[Single_TTS_Thread];
+            S2 --> S3(Cache_Check_Sentence);
+            S3 -- "Hit/Miss" --> S4(Generate_or_Retrieve);
+            S4 --> M{Clock.schedule_once};
+        end
+        subgraph Thread_1_OCR
+            G --> U1[OCR_Thread];
+            U1 --> U2(Call_Baidu_API);
+            U2 --> U3[Result_Text];
+            U3 --> L{Clock.schedule_once};
+        end
+        subgraph Thread_2_TTS_FULL
+            F --> T1[Full_TTS_Thread];
+            T1 --> T2(Text_To_Sentences);
+            T2 --> T3[Store_List];
+            
+            T3 --> T4{Cache_Check_Full};
+            T4 -- "Hit" --> H;
+            
+            T4 -- "Miss" --> T5(Generate_Full_MP3);
+            T5 --> T6(Wait_Edge_TTS);
+            T6 --> T7[Result_Path_List];
+            T7 --> H{Clock.schedule_once};
+        end
+       
+    end
