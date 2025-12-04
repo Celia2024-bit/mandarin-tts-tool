@@ -20,6 +20,8 @@ Key Features
 
 - Automatic temporary file management (cleans up unused audio files to save disk space)
 
+- Batch processing: Convert multiple text files to audio in one go
+
 System Requirements
 
 - Windows 10/11 (64-bit)
