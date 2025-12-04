@@ -7,10 +7,10 @@ import asyncio
 import threading
 import pygame
 import datetime
-from tts_engine import TTSEngine  # 导入外部TTS引擎
-from ocr_engine import OCREngine  # 导入外部OCR引擎
+from tts_engine import TTSEngine  # Import external TTS engine
+from ocr_engine import OCREngine  # Import external OCR engine
 
-# 发音人字典（与tts_engine保持一致）
+# Speaker dictionary (consistent with tts_engine)
 VOICE_DICT = {
     "Mandarin Female (Xiaoyi)": "zh-CN-XiaoyiNeural",
     "Mandarin Female (Xiaoxiao)": "zh-CN-XiaoxiaoNeural",
@@ -27,11 +27,11 @@ class EdgeTTS_GUI:
         self.root.geometry("1200x700")
         self.root.resizable(True, True)
 
-        # ====================== 核心样式配置 ======================
+        # ====================== Core Style Configuration ======================
         self.style = ttk.Style()
         self.style.theme_use("clam")
 
-        # 强调按钮（Process）样式
+        # Accent button (Process) style
         self.style.configure(
             "Accent.TButton",
             font=("Segoe UI", 10, "bold"),
@@ -48,7 +48,7 @@ class EdgeTTS_GUI:
             relief=[("active", "flat"), ("pressed", "flat")]
         )
 
-        # 普通按钮（Play/Pause/Stop）样式
+        # Regular button (Play/Pause/Stop) style
         self.style.configure(
             "TButton",
             font=("Segoe UI", 9),
@@ -66,7 +66,7 @@ class EdgeTTS_GUI:
             bordercolor=[("active", "#9CA3AF")]
         )
 
-        # 标签样式
+        # Label style
         self.style.configure(
             "TLabel",
             font=("Segoe UI", 10),
@@ -78,7 +78,7 @@ class EdgeTTS_GUI:
             foreground="#1F2937"
         )
 
-        # 输入框/下拉框样式
+        # Input box/dropdown style
         self.style.configure(
             "TEntry",
             font=("Segoe UI", 10),
@@ -111,7 +111,7 @@ class EdgeTTS_GUI:
             bordercolor=[("focus", "#2563EB")]
         )
 
-        # 框架样式（输入区/列表区）
+        # Frame style (input area/list area)
         self.style.configure(
             "Content.TFrame",
             background="#FFFFFF",
@@ -121,7 +121,7 @@ class EdgeTTS_GUI:
             borderradius=6
         )
 
-        # 状态框样式
+        # Status box style
         self.style.configure(
             "Status.TFrame",
             background="#F9FAFB",
@@ -130,7 +130,7 @@ class EdgeTTS_GUI:
             bordercolor="#E5E7EB"
         )
 
-        # ====================== 核心变量定义 ======================
+        # ====================== Core Variable Definition ======================
         self.full_audio_path = None
         self.single_audio_path = None
         self.selected_single_text = ""
@@ -139,22 +139,22 @@ class EdgeTTS_GUI:
         self.is_playing = False
         self.is_paused = False
         self.is_processing = False
-        self.is_batch_processing = False  # 批量处理状态标记
+        self.is_batch_processing = False  # Batch processing status flag
         self.infinite_var = tk.BooleanVar(value=False)
         self.is_batch_processing = False 
         
-        # 初始化引擎
+        # Initialize engines
         self.tts_engine = TTSEngine()
-        self.ocr_engine = OCREngine()  # 初始化OCR引擎
+        self.ocr_engine = OCREngine()  # Initialize OCR engine
 
-        # 初始化播放器
+        # Initialize player
         pygame.mixer.init()
 
-        # ====================== 配置区（美化，布局不变） ======================
+        # ====================== Configuration Area (beautified, layout unchanged) ======================
         self.config_frame = ttk.Frame(root, padding=(5, 8))
         self.config_frame.pack(fill=tk.X, padx=10, pady=5)
 
-        # 发音人
+        # Speaker
         self.voice_label = ttk.Label(self.config_frame, text="Voice:", font=("Segoe UI", 10))
         self.voice_label.pack(side=tk.LEFT, padx=(5, 3))
         self.voice_var = tk.StringVar(value=self.selected_voice)
@@ -168,14 +168,14 @@ class EdgeTTS_GUI:
         self.voice_combobox.pack(side=tk.LEFT, padx=5)
         self.voice_combobox.bind("<<ComboboxSelected>>", self.on_voice_change)
         
-        # 语速控制
+        # Speed control
         self.speed_label = ttk.Label(self.config_frame, text="Speed:", font=("Segoe UI", 10))
         self.speed_label.pack(side=tk.LEFT, padx=(20, 3))
-        self.speed_var = tk.StringVar(value="0")  # 默认正常速度
+        self.speed_var = tk.StringVar(value="0")  # Default normal speed
         self.speed_slider = ttk.Scale(
             self.config_frame,
-            from_=-50,  # 慢50%
-            to=100,     # 快100%
+            from_=-50,  # 50% slower
+            to=100,     # 100% faster
             orient=tk.HORIZONTAL,
             length=120,
             variable=self.speed_var,
@@ -185,7 +185,7 @@ class EdgeTTS_GUI:
         self.speed_value_label = ttk.Label(self.config_frame, text="0%", font=("Segoe UI", 9), width=5)
         self.speed_value_label.pack(side=tk.LEFT, padx=3)
 
-        # 播放按钮
+        # Playback buttons
         self.play_btn = ttk.Button(self.config_frame, text="▶ Play", command=self.play_audio, state=tk.DISABLED)
         self.play_btn.pack(side=tk.LEFT, padx=3)
         self.pause_btn = ttk.Button(self.config_frame, text="⏸ Pause", command=self.pause_audio, state=tk.DISABLED)
@@ -193,7 +193,7 @@ class EdgeTTS_GUI:
         self.stop_btn = ttk.Button(self.config_frame, text="■ Stop", command=self.stop_audio, state=tk.DISABLED)
         self.stop_btn.pack(side=tk.LEFT, padx=3)
 
-        # 播放模式
+        # Playback mode
         self.mode_label = ttk.Label(self.config_frame, text="Mode:", font=("Segoe UI", 10))
         self.mode_label.pack(side=tk.LEFT, padx=(20, 3))
         self.repeat_mode_var = tk.StringVar(value="full")
@@ -214,7 +214,7 @@ class EdgeTTS_GUI:
         )
         self.full_radio.pack(side=tk.LEFT, padx=3)
 
-        # 重复和间隔
+        # Repeat and interval
         self.repeat_label = ttk.Label(self.config_frame, text="Repeat:", font=("Segoe UI", 10))
         self.repeat_label.pack(side=tk.LEFT, padx=(20, 3))
         self.repeat_count_var = tk.StringVar(value="1")
@@ -236,11 +236,11 @@ class EdgeTTS_GUI:
         self.interval_unit = ttk.Label(self.config_frame, text="ms", font=("Segoe UI", 9))
         self.interval_unit.pack(side=tk.LEFT)
 
-        # ====================== 状态区（美化，布局不变） ======================
+        # ====================== Status Area (beautified, layout unchanged) ======================
         self.status_frame = ttk.Frame(root, style="Status.TFrame", padding=(5, 3))
         self.status_frame.pack(fill=tk.X, padx=10, pady=5)
         
-        # OCR按钮（新增）
+        # OCR button (newly added)
         self.ocr_btn = ttk.Button(
             self.status_frame,
             text="Select Image for OCR",
@@ -256,17 +256,17 @@ class EdgeTTS_GUI:
         )
         self.main_status.pack(side=tk.LEFT)
 
-        # ====================== 主内容区（保持原有稳定布局，只美化） ======================
+        # ====================== Main Content Area (maintain stable layout, only beautify) ======================
         self.main_content = ttk.Frame(root)
         self.main_content.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
 
-        # 左侧输入区（美化，布局不变）
+        # Left input area (beautified, layout unchanged)
         self.left_frame = ttk.Frame(self.main_content, style="Content.TFrame", padding=(10, 10))
         self.left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 5))
 
         self.text_label = ttk.Label(self.left_frame, text="Input Chinese Text", style="Title.TLabel")
         self.text_label.pack(anchor=tk.W, pady=(0, 5))
-        # 输入框美化
+        # Input box beautification
         self.text_input = scrolledtext.ScrolledText(
             self.left_frame,
             height=25,
@@ -274,10 +274,10 @@ class EdgeTTS_GUI:
             font=("Segoe UI", 10),
             bg="#FFFFFF",
             fg="#1F2937",
-            bd=1,  # 边框宽度
-            relief="solid",  # 实线边框
+            bd=1,  # Border width
+            relief="solid",  # Solid border
             highlightthickness=0,
-            selectbackground="#DBEAFE",  # 选中背景色
+            selectbackground="#DBEAFE",  # Selected background color
             selectforeground="#1F2937"
         )
         self.text_input.pack(fill=tk.BOTH, expand=True, pady=5)
@@ -288,7 +288,7 @@ class EdgeTTS_GUI:
 新增OCR功能：可以从图片中提取文字并转换为语音。"""
         self.text_input.insert(tk.END, default_text)
 
-        # 处理按钮（强调样式）
+        # Process button (accent style)
         self.submit_btn = ttk.Button(
             self.left_frame,
             text="Process Text & Generate Audio",
@@ -297,13 +297,13 @@ class EdgeTTS_GUI:
         )
         self.submit_btn.pack(pady=5, fill=tk.X)
 
-        # 右侧列表区（美化，布局不变）
+        # Right list area (beautified, layout unchanged)
         self.right_frame = ttk.Frame(self.main_content, style="Content.TFrame", padding=(10, 10))
         self.right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=(5, 0))
 
         self.list_label = ttk.Label(self.right_frame, text="Sentence List (Double-click to play)", style="Title.TLabel")
         self.list_label.pack(anchor=tk.W, pady=(0, 5))
-        # 列表框美化
+        # List box beautification
         self.sentence_list = tk.Listbox(
             self.right_frame,
             height=28,
@@ -321,7 +321,7 @@ class EdgeTTS_GUI:
         self.sentence_list.pack(fill=tk.BOTH, expand=True, pady=5)
         self.sentence_list.bind("<Double-Button-1>", self.play_single_sentence)
 
-        # ====================== 等待弹窗 ======================
+        # ====================== Waiting Popup ======================
         self.wait_popup = tk.Toplevel(root)
         self.wait_popup.title("Processing")
         self.wait_popup.geometry("320x110")
@@ -339,16 +339,16 @@ class EdgeTTS_GUI:
         )
         self.wait_label.pack(anchor=tk.CENTER)
 
-        # ====================== 状态颜色配置 ======================
+        # ====================== Status Color Configuration ======================
         self.status_colors = {
-            "ready": "#166534",    # 就绪：深绿
-            "playing": "#1E40AF",  # 播放：深蓝
-            "paused": "#C2410C",   # 暂停：深橙
-            "processing": "#4338CA",  # 处理：深紫
-            "error": "#991B1B"     # 错误：深红
+            "ready": "#166534",    # Ready: dark green
+            "playing": "#1E40AF",  # Playing: dark blue
+            "paused": "#C2410C",   # Paused: dark orange
+            "processing": "#4338CA",  # Processing: dark purple
+            "error": "#991B1B"     # Error: dark red
         }   
         
-    # ====================== 基础功能方法 ======================
+    # ====================== Basic Function Methods ======================
     def toggle_repeat_entry(self):
         """Enable/disable repeat times entry when infinite loop is checked"""
         if self.infinite_var.get():
@@ -413,23 +413,23 @@ class EdgeTTS_GUI:
             return self.single_audio_path and os.path.exists(self.single_audio_path)
 
     def on_voice_change(self, event):
-        """切换发言人时，彻底重置所有状态+解绑/重新绑定双击事件"""
+        """When switching speakers, completely reset all states + unbind/re-bind double-click event"""
         new_voice = self.voice_var.get()
         
-        # 1. 选择相同发言人，不做任何操作
+        # 1. If selecting the same speaker, do nothing
         if new_voice == self.selected_voice:
             return
 
-        # 2. 临时解除断句列表的双击事件绑定
+        # 2. Temporarily unbind double-click event from sentence list
         self.sentence_list.unbind("<Double-Button-1>")
 
-        # 3. 停止所有播放
+        # 3. Stop all playback
         if self.is_playing or self.is_paused:
             pygame.mixer.music.stop()
             self.is_playing = False
             self.is_paused = False
 
-        # 4. 彻底重置所有与音频/选中状态相关的变量
+        # 4. Completely reset all variables related to audio/selection status
         self.full_audio_path = None          
         self.single_audio_path = None        
         self.selected_single_text = ""       
@@ -438,23 +438,23 @@ class EdgeTTS_GUI:
         self.speed_value_label.config(text="0%")
         self.speed_slider.set(0)
 
-        # 5. 更新当前发言人
+        # 5. Update current speaker
         self.selected_voice = new_voice
 
-        # 6. 清空断句列表
+        # 6. Clear sentence list
         self.sentence_list.delete(0, tk.END)
         self.sentence_list.selection_clear(0, tk.END)
 
-        # 7. 重新绑定断句列表的双击事件
+        # 7. Rebind double-click event for sentence list
         self.sentence_list.bind("<Double-Button-1>", self.play_single_sentence)
 
-        # 8. 更新按钮状态和状态栏
+        # 8. Update button status and status bar
         self.update_buttons()
         current_mode = "Single Sentence" if self.repeat_mode_var.get() == "single" else "Full Text"
         ocr_status = "Ready"
         self.update_status(f"Status: Ready | Play Type: {current_mode} | Voice: {new_voice} | All data reset (re-generate required) | OCR: {ocr_status}")
 
-        # 9. 弹出提示
+        # 9. Pop up prompt
         messagebox.showinfo(
             "Voice Changed Successfully",
             f"Switched to voice: {new_voice}\n\nImportant Notes:\n1. All previous audio files and sentence data are reset.\n2. Please click 'Process' to split text and generate full audio.\n3. Double-click a sentence in the list to generate single sentence audio."
@@ -464,12 +464,12 @@ class EdgeTTS_GUI:
         self.speed_value_label.config(text="0%")
         self.speed_slider.set(0)
 
-    # ====================== OCR功能（完整更新） ======================
+    # ====================== OCR Functionality (fully updated) ======================
     def select_image_for_ocr(self):
         """Select image and call OCREngine for text recognition"""
-        # 禁用关键按钮
+        # Disable key buttons
         self.ocr_btn.config(state=tk.DISABLED, text="⏳ Processing...")
-        self.submit_btn.config(state=tk.DISABLED)  # 禁用Process按钮
+        self.submit_btn.config(state=tk.DISABLED)  # Disable Process button
         self.play_btn.config(state=tk.DISABLED)
         self.pause_btn.config(state=tk.DISABLED)
         self.stop_btn.config(state=tk.DISABLED)
@@ -479,7 +479,7 @@ class EdgeTTS_GUI:
         )
         
         if not file_path:
-            # 恢复按钮状态
+            # Restore button states
             self.ocr_btn.config(state=tk.NORMAL, text="Select Image for OCR")
             self.submit_btn.config(state=tk.NORMAL)
             return
@@ -487,21 +487,21 @@ class EdgeTTS_GUI:
         self.update_status("Status: Processing | Recognizing text from image... | OCR: Processing")
         self.root.update()
         
-        # 定义OCR处理线程
+        # Define OCR processing thread
         def ocr_thread_func():
             try:
-                # 调用外部OCR引擎
+                # Call external OCR engine
                 result_text = self.ocr_engine.ocr_image(file_path)
                 
-                # 处理识别结果
+                # Process recognition result
                 if result_text.startswith(("Error:", "Warning:")):
                     self.root.after(0, lambda: self.update_status(f"Status: Error | {result_text} | OCR: Failed"))
                     self.root.after(0, lambda: messagebox.showwarning("Recognition Result", result_text))
                 else:
-                    # 清除现有文本并插入识别结果
+                    # Clear existing text and insert recognition result
                     self.root.after(0, lambda: self.text_input.delete("1.0", tk.END))
                     self.root.after(0, lambda: self.text_input.insert(tk.END, result_text))
-                    # 统计有效行数
+                    # Count valid lines
                     filtered_lines = [line.strip() for line in result_text.split('\n') if line.strip()]
                     self.root.after(0, lambda: self.update_status(
                         f"Status: Ready | Recognition completed, total {len(filtered_lines)} lines | OCR: Success"
@@ -512,16 +512,16 @@ class EdgeTTS_GUI:
                 self.root.after(0, lambda: messagebox.showerror("Recognition Error", f"Text recognition failed: {str(e)}"))
             
             finally:
-                # 恢复所有按钮状态
+                # Restore all button states
                 self.root.after(0, lambda: self.ocr_btn.config(state=tk.NORMAL, text="Select Image for OCR"))
                 self.root.after(0, lambda: self.submit_btn.config(state=tk.NORMAL))
                 self.root.after(0, lambda: self.update_buttons())
 
-        # 启动OCR线程
+        # Start OCR thread
         ocr_thread = threading.Thread(target=ocr_thread_func, daemon=True)
         ocr_thread.start()
 
-    # ====================== 文本处理逻辑（完整更新） ======================
+    # ====================== Text Processing Logic (fully updated) ======================
     def process_text(self):
         output_dir = "./audio_cache"
         if os.path.exists(output_dir):
@@ -538,14 +538,14 @@ class EdgeTTS_GUI:
             messagebox.showwarning("Warning", "Please enter text first before processing!")
             return
 
-        # 重置状态并禁用按钮
+        # Reset state and disable buttons
         if self.is_playing or self.is_paused:
             self.stop_audio()
         self.full_audio_path = None
         self.single_audio_path = None
         self.update_buttons()
         
-        # 禁用相关按钮
+        # Disable related buttons
         self.submit_btn.config(state=tk.DISABLED, text="⏳ Processing...")
         self.play_btn.config(state=tk.DISABLED)
         self.pause_btn.config(state=tk.DISABLED)
@@ -564,25 +564,25 @@ class EdgeTTS_GUI:
         self.update_status(f"Status: Processing | Play Type: Full Text | Voice: {self.selected_voice} | Splitting text...")
         self.root.update()
 
-        # 初始化TTS引擎
+        # Initialize TTS engine
         tts_engine = TTSEngine()
         current_voice = VOICE_DICT[self.selected_voice]
         current_speed = int(float(self.speed_var.get()))
         
-        # 生成成功后启动置句子句列表状态为"处理中"
+        # After successful generation, set sentence list state to "processing"
         self.is_batch_processing = True
-        self.update_sentence_list_state(disabled=True)   # 禁用列表点击并改变颜色
+        self.update_sentence_list_state(disabled=True)   # Disable list clicks and change color
 
-        # 定义第二个线程：批量生成单句音频
+        # Define second thread: batch generate single sentence audio
         def batch_process_thread():
             try:
-                # 等待第一个线程完成（确保sentence_list已填充）
+                # Wait for first thread to complete (ensure sentence_list is populated)
                 while not hasattr(self, 'sentence_list_data'):
                     time.sleep(0.1)
                 
-                # 调用tts-engine的批量生成方法
+                # Call tts-engine's batch generation method
                 asyncio.run(tts_engine.process_all_sentences(
-                    self.sentence_list_data,  # 从第一个线程获取的句子列表
+                    self.sentence_list_data,  # Sentence list obtained from first thread
                     current_voice,
                     current_speed
                 ))
@@ -592,16 +592,16 @@ class EdgeTTS_GUI:
             finally:
                 self.is_batch_processing = False
                 self.root.after(0, lambda: self.update_sentence_list_state(disabled=False))
-                # 恢复按钮状态和自动播放
+                # Restore button states and auto-play
                 self.root.after(0, lambda: self.submit_btn.config(state=tk.NORMAL, text="✅ Process (Split Text + Generate Audio)"))
                 self.root.after(0, lambda: self.update_buttons())
                 self.root.after(0, lambda: self.play_audio(skip_warning=True))
                 pass
 
-        # 定义第一个线程：生成全文音频
+        # Define first thread: generate full text audio
         def main_process_thread():
             try:
-                # 调用tts-engine的全文生成方法
+                # Call tts-engine's full text generation method
                 audio_path, sentences = tts_engine.generate_full_audio(
                     input_text,
                     current_voice,
@@ -611,27 +611,27 @@ class EdgeTTS_GUI:
                 if audio_path.startswith("Error"):
                     raise Exception(audio_path)
 
-                # 保存句子列表列表供后续使用
+                # Save sentence list for later use
                 self.sentence_list_data = sentences
                 self.sentence_list.delete(0, tk.END)
                 for sentence in sentences:
                     self.sentence_list.insert(tk.END, sentence)
 
-                # 保存全文音频路径
+                # Save full text audio path
                 self.full_audio_path = audio_path
 
-                # 第一个线程完成后启用播放控制按钮
+                # Enable playback control buttons after first thread completes
                 self.root.after(0, lambda: self.update_buttons())
                 self.root.after(0, lambda: self.play_btn.config(state=tk.NORMAL))
-                self.root.after(0, lambda: self.pause_btn.config(state=tk.NORMAL))  # 额外启用暂停按钮
+                self.root.after(0, lambda: self.pause_btn.config(state=tk.NORMAL))  # Additional enable pause button
                 self.root.after(0, lambda: self.stop_btn.config(state=tk.NORMAL))
 
-                # 启动第二个线程：批量生成单句音频（后台运行）
+                # Start second thread: batch generate single sentence audio (run in background)
                 batch_thread = threading.Thread(target=batch_process_thread)
                 batch_thread.daemon = True
                 batch_thread.start()
 
-                # 更新状态
+                # Update status
                 self.root.after(0, lambda: self.repeat_mode_var.set("full"))
                 self.root.after(0, self.on_mode_change)
                 repeat_info = "Infinite Loop" if self.infinite_var.get() else f"Repeat {self.repeat_count_var.get()} times"
@@ -639,7 +639,7 @@ class EdgeTTS_GUI:
                 self.root.after(0, lambda: self.update_status(
                     f"Status: Ready | Play Type: Full Text | Voice: {self.selected_voice} | Audio Generated Successfully | {repeat_info} | {interval_info}"))
                 
-                # 核心修改：第一个线程完成后自动播放（跳过警告）
+                # Core modification: Auto-play after first thread completes (skip warning)
                 #self.root.after(0, lambda: self.play_audio(skip_warning=True))
 
             except Exception as e:
@@ -649,7 +649,7 @@ class EdgeTTS_GUI:
                 self.root.after(0, lambda: messagebox.showerror("Processing Failed", f"Failed to process text:\n\n{error_msg}"))
             
             finally:
-                # 恢复按钮状态
+                # Restore button states
                 self.is_processing = False
                 self.root.after(0, lambda: self.submit_btn.config(state=tk.NORMAL, text="✅ Process (Split Text + Generate Audio)"))
                 self.root.after(0, lambda: self.ocr_btn.config(state=tk.NORMAL))
@@ -662,46 +662,46 @@ class EdgeTTS_GUI:
                 self.root.after(0, lambda: self.interval_entry.config(state=tk.NORMAL))
                 self.root.after(0, lambda: self.text_input.config(state=tk.NORMAL))
 
-        # 启动主处理线程
+        # Start main processing thread
         main_thread = threading.Thread(target=main_process_thread)
         main_thread.daemon = True
         main_thread.start()
     
 
-    # ====================== 句子列表状态管理 ======================
+    # ====================== Sentence List State Management ======================
     def update_sentence_list_state(self, disabled):
-        """更新句子列表的可点击状态和显示样式"""
+        """Update sentence list clickable state and display style"""
         if disabled:
-            # 禁用状态：灰色文字 + 无法选中
+            # Disabled state: gray text + cannot select
             for i in range(self.sentence_list.size()):
-                self.sentence_list.itemconfig(i, fg="#9CA3AF")  # 灰色文字
-            self.sentence_list.unbind("<Double-Button-1>")  # 解绑双击事件
+                self.sentence_list.itemconfig(i, fg="#9CA3AF")  # Gray text
+            self.sentence_list.unbind("<Double-Button-1>")  # Unbind double-click event
             self.update_status(f"Status: Processing | Pre-generating all sentences (please wait)... | OCR: Ready")
         else:
-            # 启用状态：黑色文字 + 恢复点击
+            # Enabled state: black text + restore click
             for i in range(self.sentence_list.size()):
-                self.sentence_list.itemconfig(i, fg="#1F2937")  # 正常文字
-            self.sentence_list.bind("<Double-Button-1>", self.play_single_sentence)  # 重新绑定事件
+                self.sentence_list.itemconfig(i, fg="#1F2937")  # Normal text
+            self.sentence_list.bind("<Double-Button-1>", self.play_single_sentence)  # Rebind event
             current_mode = "Single Sentence" if self.repeat_mode_var.get() == "single" else "Full Text"
             self.update_status(f"Status: Ready | Play Type: {current_mode} | All sentences ready for playback | OCR: Ready")
 
-    # ====================== 单句播放逻辑（完整更新） ======================
+    # ====================== Single Sentence Playback Logic (fully updated) ======================
     def play_single_sentence(self, event):
-        # 校验1：批量处理中，禁止点击
+        # Check 1: Batch processing in progress, disable clicks
         if self.is_batch_processing:
             messagebox.showinfo("Processing", "Please wait for all sentences to be pre-generated!")
             return
 
-        # 校验2：如果正在处理中/状态未初始化，直接返回
+        # Check 2: If processing in progress/state not initialized, return directly
         if self.is_processing or self.selected_voice == "":
             return
 
-        # 校验3：断句列表为空，直接返回并提示
+        # Check 3: Sentence list is empty, return directly and prompt
         if self.sentence_list.size() == 0:
             messagebox.showinfo("No Sentences", "No sentences available! Please click 'Process' first to split text.")
             return
 
-        # 校验4：没有选中项，直接返回
+        # Check 4: No selected item, return directly
         selected_idx = self.sentence_list.curselection()
         if not selected_idx:
             return
@@ -715,38 +715,38 @@ class EdgeTTS_GUI:
         if self.is_playing:
             self.stop_audio()
 
-        # 取消之前的选中高亮
+        # Cancel previous selection highlight
         if self.selected_single_idx != -1:
             self.sentence_list.itemconfig(self.selected_single_idx, bg="white", fg="#1F2937")
         
-        # 设置当前选中项高亮
+        # Set current selection highlight
         self.selected_single_idx = selected_idx
-        self.sentence_list.itemconfig(selected_idx, bg="#DBEAFE", fg="#1E40AF")  # 蓝色高亮
+        self.sentence_list.itemconfig(selected_idx, bg="#DBEAFE", fg="#1E40AF")  # Blue highlight
         
         self.selected_single_text = self.sentence_list.get(selected_idx)
         if not self.selected_single_text:
             messagebox.showwarning("Warning", "Selected sentence is invalid!")
             return
 
-        # 禁用播放控制按钮
+        # Disable playback control buttons
         self.play_btn.config(state=tk.DISABLED)
         self.pause_btn.config(state=tk.DISABLED)
         self.stop_btn.config(state=tk.DISABLED)
 
-        # 切换到单句模式
+        # Switch to single sentence mode
         self.repeat_mode_var.set("single")
         ocr_status = "Ready"
         self.update_status(f"Status: Processing | Play Type: Single Sentence | Generating audio... (Voice: {self.selected_voice}) | OCR: {ocr_status}")
         self.root.update()
 
-        # 定义单句音频生成线程
+        # Define single sentence audio generation thread
         def single_tts_thread_func():
             try:
-                # 获取当前配置
+                # Get current configuration
                 current_voice = VOICE_DICT[self.selected_voice]
                 current_speed = int(float(self.speed_var.get()))
                 
-                # 调用外部TTS引擎生成单句音频
+                # Call external TTS engine to generate single sentence audio
                 audio_path = self.tts_engine.generate_single_sentence_audio(
                     self.selected_single_text,
                     current_voice,
@@ -763,7 +763,7 @@ class EdgeTTS_GUI:
                     self.root.after(0, lambda: self.update_status(
                         f"Status: Ready | Play Type: Single Sentence | Audio Generated (Voice: {self.selected_voice}) | {repeat_info} | {interval_info} | OCR: {ocr_status}"
                     ))
-                    # 启用播放控制按钮并自动播放
+                    # Enable playback control buttons and auto-play
                     self.root.after(0, self.update_buttons)
                     self.root.after(0, lambda: self.play_audio(skip_warning=True))
                 else:
@@ -781,14 +781,14 @@ class EdgeTTS_GUI:
                 ))
                 self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to generate audio: {str(e)}"))
             finally:
-                # 确保按钮状态恢复
+                # Ensure button states are restored
                 self.root.after(0, self.update_buttons)
 
-        # 启动单句音频生成线程
+        # Start single sentence audio generation thread
         single_tts_thread = threading.Thread(target=single_tts_thread_func, daemon=True)
         single_tts_thread.start()
 
-    # ====================== 播放控制核心 ======================
+    # ====================== Playback Control Core ======================
     def update_buttons(self):
         """Update button status based on current mode, voice and audio availability"""
         has_audio = self.check_audio_available()
@@ -806,40 +806,41 @@ class EdgeTTS_GUI:
             self.pause_btn.config(state=tk.DISABLED)
             self.stop_btn.config(state=tk.DISABLED)
 
+
     def update_status(self, status_text):
-        """根据状态文本自动匹配颜色，更新状态栏"""
-        # 清空之前的样式
+        """Automatically match colors based on status text and update the status bar"""
+        # Clear previous styles
         self.main_status.config(foreground="#333333")
 
-        # 根据状态关键词匹配颜色
+        # Match colors based on status keywords
         if "Error" in status_text or "Failed" in status_text:
-            # 错误状态：红色
+            # Error status: red
             self.main_status.config(foreground=self.status_colors["error"])
         elif "Playing" in status_text:
-            # 播放中：蓝色
+            # Playing status: blue
             self.main_status.config(foreground=self.status_colors["playing"])
         elif "Paused" in status_text:
-            # 暂停状态：橙色
+            # Paused status: orange
             self.main_status.config(foreground=self.status_colors["paused"])
         elif "Processing" in status_text:
-            # 处理中：靛蓝色
+            # Processing status: indigo
             self.main_status.config(foreground=self.status_colors["processing"])
         elif "Ready" in status_text:
-            # 就绪状态：深绿色
+            # Ready status: dark green
             self.main_status.config(foreground=self.status_colors["ready"])
 
-        # 更新状态文本
+        # Update status text
         self.main_status.config(text=status_text)
 
     def play_audio(self, skip_warning=False):
-        """根据当前模式和发言人，播放对应的音频"""
+        """Play corresponding audio according to current mode and voice"""
         current_mode = self.repeat_mode_var.get()
         current_voice = self.selected_voice
 
-        # 检查音频是否存在
+        # Check if audio exists
         if current_mode == "full":
             audio_path = self.full_audio_path
-            # 校验逻辑
+            # Validation logic
             if not skip_warning and (not audio_path or not os.path.exists(audio_path)):
                 messagebox.showwarning("Audio Not Found", f"Full text audio for {current_voice} not found!\nPlease click 'Process' to generate first.")
                 return
@@ -849,11 +850,11 @@ class EdgeTTS_GUI:
                 messagebox.showwarning("Audio Not Found", f"Single sentence audio for {current_voice} not found!\nPlease double-click a sentence to generate first.")
                 return
 
-        # 验证音频路径
+        # Verify audio path
         if not audio_path or not os.path.exists(audio_path):
             return
 
-        # 恢复播放
+        # Resume playback
         if self.is_paused:
             pygame.mixer.music.unpause()
             self.is_paused = False
@@ -865,7 +866,7 @@ class EdgeTTS_GUI:
             self.update_status(f"Status: Playing | Play Type: {current_mode} | Voice: {current_voice} | {repeat_info} | {interval_info} | OCR: {ocr_status}")
             return
 
-        # 开始新播放（异步线程）
+        # Start new playback (asynchronous thread)
         play_thread = threading.Thread(target=self.background_play, args=(audio_path, current_mode, current_voice))
         play_thread.daemon = True
         play_thread.start()
@@ -940,7 +941,7 @@ class EdgeTTS_GUI:
         self.update_status(f"Status: Ready | Play Type: {mode_text} | Voice: {self.selected_voice} | Playback Stopped | OCR: {ocr_status}")
 
 if __name__ == "__main__":
-    # 自动安装所需包
+    # Automatically install required packages
     required_packages = ["pygame", "edge-tts", "requests"]
     for pkg in required_packages:
         try:
