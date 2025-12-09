@@ -12,7 +12,8 @@ from typing import List
 
 
 from core.app_controller import AppController
-from core.ui_base import UIBase
+from interface.ui_base import UIBase
+
 
 
 

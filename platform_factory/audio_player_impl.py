@@ -11,7 +11,7 @@ import os
 import sys
 import platform
 
-from core.audio_player_base import AudioPlayerBas
+from interface.audio_player_base import AudioPlayerBase
 
 # Import modules lazily (to avoid import errors on non-matching platforms)
 def _is_android() -> bool:
