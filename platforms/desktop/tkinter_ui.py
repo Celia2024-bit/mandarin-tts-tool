@@ -10,8 +10,10 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, filedialog
 from typing import List
 
-from app_controller import AppController
-from ui_base import UIBase   # ✅ 改为导入独立的抽象类
+
+from core.app_controller import AppController
+from core.ui_base import UIBase
+
 
 
 class TkinterUI(UIBase):

@@ -12,8 +12,10 @@ import threading
 import asyncio
 from typing import List, Optional, Callable
 
-from audio_player_impl import create_audio_player
-from audio_player_base import AudioPlayerBase
+
+from platform_factory.audio_player_impl import create_audio_player
+from core.audio_player_base import AudioPlayerBase
+
 
 from tts_engine import TTSEngine                              # 外部模块
 from ocr_engine import OCREngine                              # 外部模块
