@@ -140,7 +140,7 @@ class AppController:
         
 
     # ---------------- Processing (Split & TTS) -----------------
-    def process_text(self, input_text: str):
+    def process_text(self, input_text: str, auto_play: bool = False):
         if self.is_processing:
             self._on_status("Status: Processing Already running, please wait...")
             return
@@ -182,6 +182,10 @@ class AppController:
                 self.is_batch_processing = True
                 threading.Thread(target=_batch_thread, daemon=True).start()
                 self._update_buttons()
+                if auto_play and self.full_audio_path:
+                    self._on_status("Status: Processing | Generation complete, starting playback...")
+                    # 稍微延迟一下确保文件句柄释放（可选）
+                    self.play_audio()
             except Exception as e:
                 self._on_status(f"Status: Error Play Type: Full Text Voice: {self.selected_voice_ui} Error: {e}")
             finally:

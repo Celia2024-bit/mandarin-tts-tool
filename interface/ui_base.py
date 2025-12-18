@@ -20,7 +20,7 @@ class UIBase(ABC):
     # ---------- 用户操作（默认直接调用 controller） ----------
     def on_click_process(self) -> None:
         text = self._get_input_text()
-        self.controller.process_text(text)
+        self.controller.process_text(text, auto_play=True)
 
     def on_click_ocr(self) -> None:
         file_path = self._select_ocr_file()
