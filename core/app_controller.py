@@ -113,17 +113,30 @@ class AppController:
             try:
                 self._on_status("Status: Processing Recognizing text from image...")
                 result = self.ocr_engine.ocr_image(file_path)
+                
                 if result.startswith(("Error:", "Warning:")):
                     self._on_status(f"Status: Error {result} OCR: Failed")
                 else:
-                    # 更新 UI 的输入框由 UI 自行处理；此处仅提示行数与状态
-                    filtered = [ln.strip() for ln in result.split('') if ln.strip()]
+                    # 1. 修复 split 错误：改用 splitlines() 或 split('\n')
+                    lines = result.splitlines() 
+                    filtered = [ln.strip() for ln in lines if ln.strip()]
+                    
+                    # 2. 重要：必须调用回调，把识别出的文字填回 UI 的输入框
+                    # 假设你在 AppController 初始化时传入了 UI 提供的回调函数
+                    if hasattr(self, 'ui_update_input_callback'):
+                         # 这里需要你在 UI 初始化控制器时把 text_input.insert 的逻辑传进来
+                         self.ui_update_input_callback(result)
+                    
                     self._on_status(f"Status: Ready Recognition completed, total {len(filtered)} lines OCR: Success")
+                    
             except Exception as e:
-                self._on_status(f"Status: Error OCR failed: {e}")
+                # 这里的 e 现在会捕捉到正确的错误信息
+                self._on_status(f"Status: Error OCR failed: {str(e)}")
             finally:
                 self._update_buttons()
+
         threading.Thread(target=_work, daemon=True).start()
+        
 
     # ---------------- Processing (Split & TTS) -----------------
     def process_text(self, input_text: str):
