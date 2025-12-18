@@ -16,7 +16,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller edge-tts pygame baidu-aip
+          pip install pyinstaller edge-tts pygame baidu-aip chardet
           
       - name: Build Windows EXE
         run: |
@@ -46,7 +46,7 @@ jobs:
       - name: Install Python 依赖（保留这一步，确保 pygame 安装成功）
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller edge-tts pygame baidu-aip
+          pip install pyinstaller edge-tts pygame baidu-aip chardet
           
       - name: Build Mac 可执行文件
         run: |
