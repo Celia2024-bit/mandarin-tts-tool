@@ -39,12 +39,14 @@ class AppController:
                  on_status: Callable[[str], None],
                  on_sentences_ready: Callable[[List[str]], None],
                  on_buttons_update: Callable[[bool, bool, bool], None],
-                 on_mode_change: Callable[[str], None]):
+                 on_mode_change: Callable[[str], None],
+                 on_ocr_result: Callable[[str], None]):
         # 回调到 UI
         self._on_status = on_status
         self._on_sentences_ready = on_sentences_ready
         self._on_buttons_update = on_buttons_update  # (play_enabled, pause_enabled, stop_enabled)
         self._on_mode_change = on_mode_change        # 'full' / 'single'
+        self._on_ocr_result = on_ocr_result
 
         # 引擎
         self.tts_engine = TTSEngine()
@@ -70,6 +72,8 @@ class AppController:
         self.single_audio_path: Optional[str] = None
         self.selected_single_text: str = ''
         self.selected_single_idx: int = -1
+        
+        self._on_ocr_result = on_ocr_result
         
     def get_voice_names(self): return list(VOICE_DICT.keys())
 
@@ -121,11 +125,8 @@ class AppController:
                     lines = result.splitlines() 
                     filtered = [ln.strip() for ln in lines if ln.strip()]
                     
-                    # 2. 重要：必须调用回调，把识别出的文字填回 UI 的输入框
-                    # 假设你在 AppController 初始化时传入了 UI 提供的回调函数
-                    if hasattr(self, 'ui_update_input_callback'):
-                         # 这里需要你在 UI 初始化控制器时把 text_input.insert 的逻辑传进来
-                         self.ui_update_input_callback(result)
+                    if self._on_ocr_result:
+                        self._on_ocr_result(result)
                     
                     self._on_status(f"Status: Ready Recognition completed, total {len(filtered)} lines OCR: Success")
                     

@@ -15,8 +15,6 @@ from core.app_controller import AppController
 from interface.ui_base import UIBase
 
 
-
-
 class TkinterUI(UIBase):
     def __init__(self):
         # 先创建界面，再构建控制器并把回调接入（避免 UIBase 调用未就绪控件）
@@ -113,7 +111,8 @@ class TkinterUI(UIBase):
             on_status=self.cb_update_status,
             on_sentences_ready=self.cb_fill_sentences,
             on_buttons_update=self.cb_set_buttons,
-            on_mode_change=self.cb_mode_changed
+            on_mode_change=self.cb_mode_changed,
+            on_ocr_result=self.cb_fill_ocr_text
         )
         super().__init__(controller)
 
@@ -136,6 +135,12 @@ class TkinterUI(UIBase):
     # ---------- 控制器回调 ----------
     def cb_update_status(self, text: str) -> None:
         self.status_label.config(text=text)
+    def cb_fill_ocr_text(self, text: str) -> None:
+        """确保在主线程更新 UI"""
+        def update():
+            self.text_input.delete("1.0", tk.END)
+            self.text_input.insert(tk.END, text)
+        self.root.after(0, update)
 
     def cb_fill_sentences(self, sentences: List[str]) -> None:
         self.sentence_list.delete(0, tk.END)
