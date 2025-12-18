@@ -13,7 +13,9 @@ VOICE_DICT = {
     "Mandarin Female (Xiaoxiao)": "zh-CN-XiaoxiaoNeural",
     "Mandarin Female (Yunxi)": "zh-CN-YunxiNeural",
     "Mandarin Male (Yunjian)": "zh-CN-YunjianNeural",
+    "Mandarin Male (YunyangNeural)": "zh-CN-YunyangNeural",
 }
+
 AUDIO_DIR = "audio_cache"
 
 # Ensure the cache directory exists at initialization
@@ -74,7 +76,8 @@ class TTSEngine:
         """
         The asynchronous core function that calls edge-tts to generate and save audio.
         """
-        communicate = edge_tts.Communicate(text, voice, rate=f"+{rate}%")
+        rate_str = f"{rate:+d}%" if isinstance(rate, int) else f"{rate}%"
+        communicate = edge_tts.Communicate(text, voice, rate=rate_str)
         await communicate.save(filepath)
 
     def _get_audio_file_path(self, text, voice, rate, prefix="full"):
