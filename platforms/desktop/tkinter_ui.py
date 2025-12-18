@@ -129,7 +129,8 @@ class TkinterUI(UIBase):
             pass
 
     # ---------- 事件循环 ----------
-    def run(self):
+    def run(self) -> None:
+        """启动 Tkinter 主循环"""
         self.root.mainloop()
 
     # ---------- 控制器回调 ----------

@@ -5,7 +5,7 @@ iOS implementation using PyObjus to wrap the native AVAudioPlayer.
 """
 
 from typing import Optional
-from audio_player_base import AudioPlayerBase
+from interface.audio_player_base import AudioPlayerBase
 
 # 尝试导入 PyObjus 依赖
 try:

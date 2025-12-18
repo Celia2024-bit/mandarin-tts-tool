@@ -5,7 +5,7 @@ Desktop audio player (Windows/macOS/Linux) using pygame.mixer.
 """
 
 from typing import Optional
-from audio_player_base import AudioPlayerBase
+from interface.audio_player_base import AudioPlayerBase
 
 class PygameAudioPlayer(AudioPlayerBase):
     """

@@ -40,7 +40,7 @@ def create_audio_player() -> AudioPlayerBase:
     else:
         # Desktop default; handle missing pygame gracefully
         try:
-            from audio_player_desktop import PygameAudioPlayer
+            from platforms.desktop.audio_player_desktop import PygameAudioPlayer
             return PygameAudioPlayer()
         except Exception as e:
             # As a last resort, fallback to a no-op stub to avoid crashes

@@ -9,3 +9,4 @@ from platforms.desktop.tkinter_ui import TkinterUI
 
 if __name__ == "__main__":
     ui = TkinterUI()
+    ui.run()
