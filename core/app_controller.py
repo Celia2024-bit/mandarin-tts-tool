@@ -49,7 +49,7 @@ class AppController:
         self._on_ocr_result = on_ocr_result
 
         # 引擎
-        self.tts_engine = TTSEngine()
+        self.tts_engine = TTSEngine(clear_cache_on_start=True)
         self.ocr_engine = OCREngine()
         self.player: AudioPlayerBase = create_audio_player()
 

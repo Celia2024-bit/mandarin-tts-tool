@@ -26,8 +26,35 @@ class TTSEngine:
     Handles all core Text-to-Speech logic using the edge-tts library.
     Manages text splitting, caching, and audio generation.
     """
-    def __init__(self, audio_dir=AUDIO_DIR):
+    def __init__(self, audio_dir=AUDIO_DIR, clear_cache_on_start=True):
         self._audio_dir = audio_dir
+        
+        # Ensure the cache directory exists
+        os.makedirs(self._audio_dir, exist_ok=True)
+        
+        # Clear cache on initialization if requested
+        if clear_cache_on_start:
+            self._clear_cache()
+    
+    def _clear_cache(self):
+        """
+        Clears all cached audio files in the audio directory.
+        Keeps the directory itself intact.
+        """
+        try:
+            if os.path.exists(self._audio_dir):
+                for filename in os.listdir(self._audio_dir):
+                    file_path = os.path.join(self._audio_dir, filename)
+                    try:
+                        if os.path.isfile(file_path):
+                            os.unlink(file_path)
+                        elif os.path.isdir(file_path):
+                            shutil.rmtree(file_path)
+                    except Exception as e:
+                        print(f"Warning: Failed to delete {file_path}: {e}")
+                print(f"Cache cleared: {self._audio_dir}")
+        except Exception as e:
+            print(f"Warning: Failed to clear cache directory: {e}")
         
     def text_to_sentences(self, text):
         """
