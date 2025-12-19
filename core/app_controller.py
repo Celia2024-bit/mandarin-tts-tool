@@ -234,6 +234,16 @@ class AppController:
             if not skip_warning:
                 self._on_status(f"Status: Error Audio not found for {mode}")
             return
+        
+        # 定义完成回调
+        def on_playback_complete():
+            self.is_playing = False
+            self.is_paused = False
+            self._on_status(
+                f"Status: Completed Play Type: {'Full Text' if mode=='full' else 'Single Sentence'} "
+                f"Voice: {self.selected_voice_ui}")
+            self._update_buttons()
+        
         # 使用抽象播放器进行循环控制
         self.is_paused = False
         self.is_playing = True
@@ -241,12 +251,14 @@ class AppController:
             audio_path,
             repeat_count=(-1 if self.infinite_loop else self.repeat_count),
             interval_ms=self.interval_ms,
-            on_complete=lambda: self._on_status(
-                f"Status: Completed Play Type: {'Full Text' if mode=='full' else 'Single Sentence'} Voice: {self.selected_voice_ui}")
+            on_complete=on_playback_complete
         )
-        self._on_status(f"Status: Playing Play Type: {'Full Text' if mode=='full' else 'Single Sentence'} Voice: {self.selected_voice_ui}" f"Repeat: {'Infinite' if self.infinite_loop else self.repeat_count} | Interval: {self.interval_ms}ms"
+        self._on_status(
+            f"Status: Playing Play Type: {'Full Text' if mode=='full' else 'Single Sentence'} "
+            f"Voice: {self.selected_voice_ui} "
+            f"Repeat: {'Infinite' if self.infinite_loop else self.repeat_count} | Interval: {self.interval_ms}ms"
         )
-        self._update_buttons()
+        self._update_buttons()    
 
     def pause_audio(self):
         if not self.is_playing or self.is_paused:
