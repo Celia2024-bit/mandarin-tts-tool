@@ -114,6 +114,7 @@ class TkinterUI(UIBase):
             on_mode_change=self.cb_mode_changed,
             on_ocr_result=self.cb_fill_ocr_text
         )
+
         super().__init__(controller)
 
         # ✅ 从控制器读取 voice 列表并设置默认选中
@@ -125,6 +126,15 @@ class TkinterUI(UIBase):
             self.voice_var.set(self.controller.selected_voice_ui)
         except Exception:
             # 如果出现异常，保持已有占位值
+            pass
+            
+         # ✅ 新增：设置默认文本到输入框
+        try:
+            default_text = self.controller.get_default_text()
+            self.text_input.delete("1.0", tk.END)
+            self.text_input.insert("1.0", default_text)
+        except Exception:
+            # 如果获取默认文本失败，保持空白
             pass
 
     # ---------- 事件循环 ----------

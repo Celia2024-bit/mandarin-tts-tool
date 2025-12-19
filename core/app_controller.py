@@ -35,6 +35,10 @@ class AppController:
     - OCR 图片识别
     - 维护运行状态，向 UI 回调通知（状态文本、按钮使能、列表内容等）
     """
+    DEFAULT_TEXT = """这是一个高质量的普通话TTS工具，支持全文朗读和单句播放功能。
+用户可以输入任意中文文本，点击处理按钮即可完成断句和音频生成。
+切换不同的发音人后，需要重新生成音频才能生效。
+支持重复播放、无限循环和自定义播放间隔，操作简单易用。"""
     def __init__(self,
                  on_status: Callable[[str], None],
                  on_sentences_ready: Callable[[List[str]], None],
@@ -76,6 +80,10 @@ class AppController:
         self._on_ocr_result = on_ocr_result
         
     def get_voice_names(self): return list(VOICE_DICT.keys())
+    
+    def get_default_text(self):
+        """返回默认文本供 UI 使用"""
+        return self.DEFAULT_TEXT
 
     # ---------------- Configuration -----------------
     def set_voice(self, ui_voice_name: str):
