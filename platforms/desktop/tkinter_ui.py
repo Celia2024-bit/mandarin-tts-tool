@@ -69,12 +69,18 @@ class TkinterUI(UIBase):
         self.repeat_entry = ttk.Entry(cfg, width=4)
         self.repeat_entry.insert(0, '1')
         self.repeat_entry.pack(side=tk.LEFT)
+        # ✅ 新增这两行
+        self.repeat_entry.bind("<FocusOut>", lambda e: self._apply_repeat_config())
+        self.repeat_entry.bind("<Return>", lambda e: (self._apply_repeat_config(), self.repeat_entry.master.focus()))
         ttk.Checkbutton(cfg, text="Loop", variable=self.infinite_var,
                         command=lambda: self._apply_repeat_config()).pack(side=tk.LEFT, padx=4)
         ttk.Label(cfg, text="Interval (ms):").pack(side=tk.LEFT, padx=(16, 4))
         self.interval_entry = ttk.Entry(cfg, width=6)
         self.interval_entry.insert(0, '500')
         self.interval_entry.pack(side=tk.LEFT)
+        # ✅ 新增这两行
+        self.interval_entry.bind("<FocusOut>", lambda e: self._apply_repeat_config())
+        self.interval_entry.bind("<Return>", lambda e: (self._apply_repeat_config(), self.interval_entry.master.focus()))
 
         # 状态栏
         self.status_label = ttk.Label(
