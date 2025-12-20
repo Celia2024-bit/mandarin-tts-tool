@@ -2,6 +2,7 @@
 
 import certifi
 import os
+import sys
 
 block_cipher = None
 
@@ -31,8 +32,6 @@ hiddenimports = [
     "baidu_aip",
     "certifi",
     "chardet",
-
-    # setuptools 依赖
     "pkg_resources",
     "jaraco",
     "jaraco.functools",
@@ -40,14 +39,12 @@ hiddenimports = [
     "jaraco.context",
     "jaraco.collections",
     "jaraco.classes",
-
-    # 你要求加入的
     "appdirs",
     "platformdirs",
 ]
 
 a = Analysis(
-    ['main_desktop.py'],   # 你的唯一入口
+    ['main_desktop.py'],
     pathex=[],
     binaries=[],
     datas=datas,
@@ -56,29 +53,30 @@ a = Analysis(
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
     cipher=block_cipher,
-    noarchive=False,
 )
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
+# ---- Windows 用 EXE ----
 exe = EXE(
     pyz,
     a.scripts,
     [],
     exclude_binaries=True,
     name='MandarinTTS',
-    debug=False,
-    bootloader_ignore_signals=False,
-    strip=False,
-    upx=True,
-    console=False,   # GUI 程序必须关闭 console
+    console=False,
+)
+
+# ---- macOS 用 BUNDLE（生成 .app）----
+app = BUNDLE(
+    exe,
+    name='MandarinTTS.app',
+    icon=None,
 )
 
 coll = COLLECT(
-    exe,
+    app if sys.platform == "darwin" else exe,
     a.binaries,
     a.zipfiles,
     a.datas,
