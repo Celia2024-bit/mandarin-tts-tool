@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import os
 import re
+import sys
 
 # --- Baidu OCR Configuration (Extracted from your existing code) ---
 BAIDU_OCR_CONFIG = {
@@ -9,33 +10,46 @@ BAIDU_OCR_CONFIG = {
     "SECRET_KEY": "EZxvX4H54YSAHiPU61utysBOovGPlCZn"
 }
 
-# --- Import and Error Handling for Baidu SDK ---
-try:
-    # We expect 'aip' to be installed (baidu-aip package)
-    from aip import AipOcr
-except ImportError:
-    # Define a dummy class for graceful failure if the SDK is missing.
+# --- Platform-aware Import and Error Handling for Baidu SDK ---
+BAIDU_OCR_AVAILABLE = False
+
+if sys.platform == "win32":
+    # 只在 Windows 平台尝试导入
+    try:
+        from aip import AipOcr
+        BAIDU_OCR_AVAILABLE = True
+    except ImportError:
+        # Windows 上 baidu-aip 未安装
+        class AipOcr:
+            def __init__(self, *args, **kwargs):
+                pass
+            def basicGeneral(self, *args, **kwargs):
+                return {"error_msg": "Baidu OCR SDK (aip) not installed. Please run 'pip install baidu-aip'."}
+else:
+    # macOS/Linux: 直接定义 dummy class
     class AipOcr:
         def __init__(self, *args, **kwargs):
-            self.installed = False
+            pass
         def basicGeneral(self, *args, **kwargs):
-            return {"error_msg": "Baidu OCR SDK (aip) not installed. Please run 'pip install baidu-aip'."}
+            return {"error_msg": f"Baidu OCR is only supported on Windows. Current platform: {sys.platform}"}
+
 
 class OCREngine:
     """
     Handles all core OCR logic using the Baidu OCR SDK.
     This class is completely UI-agnostic and synchronous.
+    
+    Platform Support:
+    - Windows: Full OCR support with baidu-aip
+    - macOS/Linux: Returns platform not supported error
     """
     def __init__(self):
         """Initializes the Baidu OCR client."""
         self.client = self._get_ocr_client()
+        self.is_available = BAIDU_OCR_AVAILABLE
 
     def _get_ocr_client(self):
         """Initializes and returns the Baidu OCR client."""
-        # Check if the dummy class was used
-        if 'AipOcr' in globals() and getattr(AipOcr, 'installed', True) == False:
-             return AipOcr()
-
         client = AipOcr(
             BAIDU_OCR_CONFIG["APP_ID"],
             BAIDU_OCR_CONFIG["API_KEY"],
@@ -47,9 +61,13 @@ class OCREngine:
         """
         Performs basic general OCR on the given image path and applies
         specific Chinese text filtering rules.
+        
+        Returns:
+            str: OCR result text or error message
         """
-        if getattr(self.client, 'installed', True) == False:
-            return self.client.basicGeneral().get("error_msg")
+        # 首先检查平台支持
+        if not BAIDU_OCR_AVAILABLE:
+            return f"Error: OCR is only supported on Windows platform (current: {sys.platform})"
             
         if not os.path.exists(image_path):
             return f"Error: Image file not found at path: {image_path}"
@@ -65,6 +83,9 @@ class OCREngine:
             # --- Result Parsing and Custom Filtering Logic ---
             if 'error_code' in result:
                 return f"OCR API Error ({result.get('error_code')}): {result.get('error_msg')}"
+            
+            if 'error_msg' in result and not 'words_result' in result:
+                return f"Error: {result.get('error_msg')}"
             
             if "words_result" in result:
                 # Concatenate all recognized text first
@@ -92,8 +113,10 @@ class OCREngine:
 # --- Testing Block ---
 if __name__ == "__main__":
     print("--- Testing OCREngine Module ---")
+    print(f"Platform: {sys.platform}")
+    print(f"Baidu OCR Available: {BAIDU_OCR_AVAILABLE}")
     
-    # NOTE: This test requires the 'baidu-aip' SDK to be installed
+    # NOTE: This test requires the 'baidu-aip' SDK to be installed on Windows
     # To test successfully, replace 'real_test_image.jpg' with a path to a Chinese image.
     test_image_path = "real_test_image.jpg" 
     
@@ -108,12 +131,8 @@ if __name__ == "__main__":
     try:
         engine = OCREngine()
         
-        # Check for SDK installation error
-        if getattr(engine.client, 'installed', True) == False:
-            print(f"\nFATAL ERROR: {engine.client.basicGeneral().get('error_msg')}")
-            exit()
-
-        print(f"\nAttempting OCR on: {test_image_path}...")
+        print(f"\nOCR Engine initialized. Available: {engine.is_available}")
+        print(f"Attempting OCR on: {test_image_path}...")
         
         result = engine.ocr_image(test_image_path)
         
@@ -121,7 +140,7 @@ if __name__ == "__main__":
         if result.startswith(("Error:", "Warning:")):
             print(f"Status: {result}")
         else:
-            print("Status: Success (or API error during actual call).")
+            print("Status: Success")
             print("Cleaned Text Output:")
             print("-" * 20)
             print(result)

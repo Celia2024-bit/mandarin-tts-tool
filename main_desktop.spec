@@ -29,7 +29,6 @@ hiddenimports = [
     "aiohttp",
     "asyncio",
     "pygame",
-    "baidu_aip",
     "certifi",
     "chardet",
     "pkg_resources",
@@ -42,6 +41,10 @@ hiddenimports = [
     "appdirs",
     "platformdirs",
 ]
+
+# 只在 Windows 平台添加 baidu_aip
+if sys.platform == "win32":
+    hiddenimports.append("baidu_aip")
 
 a = Analysis(
     ['main_desktop.py'],
@@ -68,19 +71,35 @@ exe = EXE(
     console=False,
 )
 
-# ---- macOS 用 BUNDLE（生成 .app）----
-app = BUNDLE(
-    exe,
-    name='MandarinTTS.app',
-    icon=None,
-)
+# ---- macOS 用 BUNDLE(生成 .app)----
+if sys.platform == "darwin":
+    app = BUNDLE(
+        exe,
+        name='MandarinTTS.app',
+        icon=None,
+        bundle_identifier=None,
+    )
 
-coll = COLLECT(
-    app if sys.platform == "darwin" else exe,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    strip=False,
-    upx=True,
-    name='MandarinTTS',
-)
+# ---- COLLECT ----
+if sys.platform == "darwin":
+    # macOS: 收集到 app 内部
+    coll = COLLECT(
+        exe,
+        a.binaries,
+        a.zipfiles,
+        a.datas,
+        strip=False,
+        upx=True,
+        name='MandarinTTS',
+    )
+else:
+    # Windows: 正常收集
+    coll = COLLECT(
+        exe,
+        a.binaries,
+        a.zipfiles,
+        a.datas,
+        strip=False,
+        upx=True,
+        name='MandarinTTS',
+    )

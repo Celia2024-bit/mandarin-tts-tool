@@ -94,16 +94,6 @@ class TkinterUI(UIBase):
         main = ttk.Frame(self.root)
         main.pack(fill=tk.BOTH, expand=True, padx=10, pady=8)
 
-        # 左：文本输入
-        left = ttk.Frame(main)
-        left.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        ttk.Label(left, text="Input Chinese Text").pack(anchor=tk.W)
-        self.text_input = scrolledtext.ScrolledText(left, height=25, width=60, font=("Segoe UI", 10))
-        self.text_input.pack(fill=tk.BOTH, expand=True)
-        ttk.Button(left, text="Process Text & Generate Audio", style="Accent.TButton",
-                   command=self.on_click_process).pack(pady=6, fill=tk.X)
-        ttk.Button(left, text="Select Image for OCR", command=self.on_click_ocr).pack(pady=4, fill=tk.X)
-
         # 右：句子列表
         right = ttk.Frame(main)
         right.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
@@ -122,6 +112,19 @@ class TkinterUI(UIBase):
         )
 
         super().__init__(controller)
+        
+        # 左：文本输入
+        left = ttk.Frame(main)
+        left.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        ttk.Label(left, text="Input Chinese Text").pack(anchor=tk.W)
+        self.text_input = scrolledtext.ScrolledText(left, height=25, width=60, font=("Segoe UI", 10))
+        self.text_input.pack(fill=tk.BOTH, expand=True)
+        ttk.Button(left, text="Process Text & Generate Audio", style="Accent.TButton",
+                   command=self.on_click_process).pack(pady=6, fill=tk.X)
+
+        # ✅ 只在支持 OCR 的平台显示按钮
+        if self.controller.is_ocr_supported():
+            ttk.Button(left, text="Select Image for OCR", command=self.on_click_ocr).pack(pady=4, fill=tk.X)
 
         # ✅ 从控制器读取 voice 列表并设置默认选中
         try:

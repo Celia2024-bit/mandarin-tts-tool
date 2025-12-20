@@ -1,13 +1,10 @@
-
 # -*- coding: utf-8 -*-
 """
-AppController: 负责在用户点击按钮后的各类操作逻辑（不含界面）。
-依赖：
-- audio_player.create_audio_player / AudioPlayerBase
-- tts_engine.TTSEngine  （需用户自备实现）
-- ocr_engine.OCREngine  （需用户自备实现）
+AppController: 负责在用户点击按钮后的各类操作逻辑(不含界面)。
+OCR 功能仅在 Windows 平台可用。
 """
 import os
+import sys
 import threading
 import asyncio
 from typing import List, Optional, Callable
@@ -15,8 +12,8 @@ from typing import List, Optional, Callable
 from platform_factory.audio_player_impl import create_audio_player
 from interface.audio_player_base import AudioPlayerBase
 
-from .tts_engine import TTSEngine                              # 外部模块
-from .ocr_engine import OCREngine                              # 外部模块
+from .tts_engine import TTSEngine
+from .ocr_engine import OCREngine, BAIDU_OCR_AVAILABLE
 
 VOICE_DICT = {
     "Mandarin Female (Xiaoyi)": "zh-CN-XiaoyiNeural",
@@ -29,16 +26,17 @@ VOICE_DICT = {
 
 class AppController:
     """
-    将界面事件委托到此控制器：
-    - 文本处理（拆句、生成整段与单句音频）
-    - 音频播放控制（play/pause/resume/stop）
-    - OCR 图片识别
-    - 维护运行状态，向 UI 回调通知（状态文本、按钮使能、列表内容等）
+    将界面事件委托到此控制器:
+    - 文本处理(拆句、生成整段与单句音频)
+    - 音频播放控制(play/pause/resume/stop)
+    - OCR 图片识别 (仅 Windows)
+    - 维护运行状态,向 UI 回调通知
     """
-    DEFAULT_TEXT = """这是一个高质量的普通话TTS工具，支持全文朗读和单句播放功能。
-用户可以输入任意中文文本，点击处理按钮即可完成断句和音频生成。
-切换不同的发音人后，需要重新生成音频才能生效。
-支持重复播放、无限循环和自定义播放间隔，操作简单易用。"""
+    DEFAULT_TEXT = """这是一个高质量的普通话TTS工具,支持全文朗读和单句播放功能。
+用户可以输入任意中文文本,点击处理按钮即可完成断句和音频生成。
+切换不同的发音人后,需要重新生成音频才能生效。
+支持重复播放、无限循环和自定义播放间隔,操作简单易用。"""
+
     def __init__(self,
                  on_status: Callable[[str], None],
                  on_sentences_ready: Callable[[List[str]], None],
@@ -48,8 +46,8 @@ class AppController:
         # 回调到 UI
         self._on_status = on_status
         self._on_sentences_ready = on_sentences_ready
-        self._on_buttons_update = on_buttons_update  # (play_enabled, pause_enabled, stop_enabled)
-        self._on_mode_change = on_mode_change        # 'full' / 'single'
+        self._on_buttons_update = on_buttons_update
+        self._on_mode_change = on_mode_change
         self._on_ocr_result = on_ocr_result
 
         # 引擎
@@ -57,10 +55,13 @@ class AppController:
         self.ocr_engine = OCREngine()
         self.player: AudioPlayerBase = create_audio_player()
 
+        # OCR 可用性标志
+        self.ocr_available = BAIDU_OCR_AVAILABLE
+
         # 状态变量
         self.selected_voice_ui: str = "Mandarin Female (Xiaoyi)"
         self.speed_percent: int = 0
-        self.repeat_mode: str = 'full'         # 'full' 或 'single'
+        self.repeat_mode: str = 'full'
         self.infinite_loop: bool = False
         self.repeat_count: int = 1
         self.interval_ms: int = 500
@@ -77,19 +78,21 @@ class AppController:
         self.selected_single_text: str = ''
         self.selected_single_idx: int = -1
         
-        self._on_ocr_result = on_ocr_result
-        
-    def get_voice_names(self): return list(VOICE_DICT.keys())
+    def get_voice_names(self): 
+        return list(VOICE_DICT.keys())
     
     def get_default_text(self):
         """返回默认文本供 UI 使用"""
         return self.DEFAULT_TEXT
+    
+    def is_ocr_supported(self):
+        """检查 OCR 是否在当前平台可用"""
+        return self.ocr_available
 
     # ---------------- Configuration -----------------
     def set_voice(self, ui_voice_name: str):
         self.selected_voice_ui = ui_voice_name
         self._on_status(f"Status: Ready Voice changed -> {ui_voice_name} Re-generate required")
-        # 切换说话人时清理之前的音频状态
         self.stop_audio()
         self.full_audio_path = None
         self.single_audio_path = None
@@ -102,7 +105,6 @@ class AppController:
 
     def set_speed(self, percent: int):
         self.speed_percent = percent
-        # 改速后旧音频失效
         self.full_audio_path = None
         self.single_audio_path = None
         if self.is_playing or self.is_paused:
@@ -111,7 +113,7 @@ class AppController:
         self._update_buttons()
 
     def set_repeat_config(self, mode: str, infinite: bool, count: int, interval_ms: int):
-        self.repeat_mode = mode  # 'full'/'single'
+        self.repeat_mode = mode
         self.infinite_loop = infinite
         self.repeat_count = max(1, int(count)) if not infinite else 1
         self.interval_ms = max(0, int(interval_ms))
@@ -120,32 +122,47 @@ class AppController:
 
     # ---------------- OCR -----------------
     def ocr_image(self, file_path: str):
-        """后台线程进行 OCR，完毕后把结果文本交由 UI。"""
+        """
+        后台线程进行 OCR,完毕后把结果文本交由 UI。
+        仅在 Windows 平台可用。
+        """
+        # 首先检查平台支持
+        if not self.ocr_available:
+            platform_name = {
+                'darwin': 'macOS',
+                'linux': 'Linux',
+                'linux2': 'Linux'
+            }.get(sys.platform, sys.platform)
+            
+            self._on_status(
+                f"Status: Error OCR feature is only available on Windows (Current: {platform_name})"
+            )
+            return
+
         def _work():
             try:
                 self._on_status("Status: Processing Recognizing text from image...")
                 result = self.ocr_engine.ocr_image(file_path)
                 
                 if result.startswith(("Error:", "Warning:")):
-                    self._on_status(f"Status: Error {result} OCR: Failed")
+                    self._on_status(f"Status: Error {result}")
                 else:
-                    # 1. 修复 split 错误：改用 splitlines() 或 split('\n')
                     lines = result.splitlines() 
                     filtered = [ln.strip() for ln in lines if ln.strip()]
                     
                     if self._on_ocr_result:
                         self._on_ocr_result(result)
                     
-                    self._on_status(f"Status: Ready Recognition completed, total {len(filtered)} lines OCR: Success")
+                    self._on_status(
+                        f"Status: Ready Recognition completed, total {len(filtered)} lines OCR: Success"
+                    )
                     
             except Exception as e:
-                # 这里的 e 现在会捕捉到正确的错误信息
                 self._on_status(f"Status: Error OCR failed: {str(e)}")
             finally:
                 self._update_buttons()
 
         threading.Thread(target=_work, daemon=True).start()
-        
 
     # ---------------- Processing (Split & TTS) -----------------
     def process_text(self, input_text: str, auto_play: bool = False):
@@ -168,7 +185,6 @@ class AppController:
 
         def _batch_thread():
             try:
-                # 等待句子列表准备好
                 while not self.sentences:
                     import time; time.sleep(0.1)
                 asyncio.run(self.tts_engine.process_all_sentences(self.sentences, current_voice, current_speed))
@@ -186,13 +202,11 @@ class AppController:
                 self._on_sentences_ready(self.sentences)
                 self.full_audio_path = audio_path
                 self._on_status(f"Status: Ready Play Type: Full Text Voice: {self.selected_voice_ui} Audio Generated Successfully")
-                # 开二线程做单句批量生成
                 self.is_batch_processing = True
                 threading.Thread(target=_batch_thread, daemon=True).start()
                 self._update_buttons()
                 if auto_play and self.full_audio_path:
                     self._on_status("Status: Processing | Generation complete, starting playback...")
-                    # 稍微延迟一下确保文件句柄释放（可选）
                     self.play_audio()
             except Exception as e:
                 self._on_status(f"Status: Error Play Type: Full Text Voice: {self.selected_voice_ui} Error: {e}")
@@ -224,7 +238,6 @@ class AppController:
                     self.selected_single_text, current_voice, current_speed)
                 if str(audio_path).startswith("Error"):
                     raise Exception(audio_path)
-                # 简单体积检查由外部决定，这里只保存路径
                 self.single_audio_path = audio_path
                 self._on_status(f"Status: Ready Play Type: Single Sentence Audio Generated (Voice: {self.selected_voice_ui})")
                 self.play_audio(skip_warning=True)
@@ -243,7 +256,6 @@ class AppController:
                 self._on_status(f"Status: Error Audio not found for {mode}")
             return
         
-        # 定义完成回调
         def on_playback_complete():
             self.is_playing = False
             self.is_paused = False
@@ -252,7 +264,6 @@ class AppController:
                 f"Voice: {self.selected_voice_ui}")
             self._update_buttons()
         
-        # 使用抽象播放器进行循环控制
         self.is_paused = False
         self.is_playing = True
         self.player.play(

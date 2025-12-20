@@ -51,7 +51,17 @@ jobs:
       - name: Build Mac App
         run: |
           pyinstaller main_desktop.spec
-          hdiutil create -volname "MandarinTTS" -srcfolder "dist/MandarinTTS.app" -ov -format UDZO MandarinTTS-Mac.dmg
+          # 检查实际生成的路径
+          ls -la dist/
+          # 使用正确的路径创建 DMG
+          if [ -d "dist/MandarinTTS/MandarinTTS.app" ]; then
+            hdiutil create -volname "MandarinTTS" -srcfolder "dist/MandarinTTS/MandarinTTS.app" -ov -format UDZO MandarinTTS-Mac.dmg
+          elif [ -d "dist/MandarinTTS.app" ]; then
+            hdiutil create -volname "MandarinTTS" -srcfolder "dist/MandarinTTS.app" -ov -format UDZO MandarinTTS-Mac.dmg
+          else
+            echo "找不到 .app 文件"
+            exit 1
+          fi
       
       - name: Upload Mac DMG
         uses: actions/upload-artifact@v4
