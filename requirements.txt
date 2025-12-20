@@ -1,0 +1,18 @@
+edge-tts
+aiohttp
+pygame
+baidu-aip
+chardet
+pip-system-certs
+certifi
+
+# setuptools 依赖
+jaraco.functools
+jaraco.text
+jaraco.context
+jaraco.collections
+jaraco.classes
+
+# 你要求加入的
+appdirs
+platformdirs

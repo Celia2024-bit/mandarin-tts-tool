@@ -1,6 +1,6 @@
 name: Build Windows + Mac Installers
 
-on: workflow_dispatch  # 手动触发
+on: workflow_dispatch
 
 jobs:
   build-windows:
@@ -16,17 +16,18 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller edge-tts pygame baidu-aip chardet pip-system-certs
+          pip install -r requirements.txt
+          pip install pyinstaller
           
       - name: Build Windows EXE
         run: |
-          pyinstaller -F -w ./mandarinTtsTool_threads.py --name "MandarinTTS-Windows"
+          pyinstaller main_desktop.spec
       
       - name: Upload Windows EXE
         uses: actions/upload-artifact@v4
         with:
           name: MandarinTTS-Windows
-          path: dist/MandarinTTS-Windows.exe
+          path: dist/MandarinTTS/
 
   build-mac:
     runs-on: macos-latest
@@ -38,23 +39,19 @@ jobs:
         with:
           python-version: '3.11'
           
-      - name: Install Mac 系统依赖（仅修复这一步！）
-        run: |
-          # 关键修复：brew 没有 pygame，改用 pip 安装，只保留 python-tk（GUI 依赖）
-          brew install python-tk
+      - name: Install Mac system deps
+        run: brew install python-tk
           
-      - name: Install Python 依赖（保留这一步，确保 pygame 安装成功）
+      - name: Install Python deps
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller edge-tts pygame baidu-aip chardet pip-system-certs
+          pip install -r requirements.txt
+          pip install pyinstaller
           
-      - name: Build Mac 可执行文件
+      - name: Build Mac App
         run: |
-          # 打包成 Mac 专用的.app 文件（去掉 -F 单文件参数，Mac 更稳定）
-          pyinstaller -w ./mandarinTtsTool_threads.py --name "MandarinTTS-Mac"
-          
-          # 生成 DMG 镜像（路径修正：指向.app 文件夹，之前可能漏了 .app 后缀）
-          hdiutil create -volname "MandarinTTS" -srcfolder "dist/MandarinTTS-Mac.app" -ov -format UDZO MandarinTTS-Mac.dmg
+          pyinstaller main_desktop.spec
+          hdiutil create -volname "MandarinTTS" -srcfolder "dist/MandarinTTS.app" -ov -format UDZO MandarinTTS-Mac.dmg
       
       - name: Upload Mac DMG
         uses: actions/upload-artifact@v4
