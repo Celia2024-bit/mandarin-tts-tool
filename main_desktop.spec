@@ -6,12 +6,11 @@ import sys
 
 block_cipher = None
 
-# ---- 打包 certifi 证书 ----
+# ---- 1. 基础数据收集 ----
 datas = [
     (certifi.where(), "certifi"),
 ]
 
-# ---- 打包你的整个项目结构 ----
 project_dirs = [
     ("core", "core"),
     ("interface", "interface"),
@@ -23,13 +22,13 @@ for src, dest in project_dirs:
     if os.path.isdir(src):
         datas.append((src, dest))
 
-# ---- PyInstaller 无法自动收集的依赖 ----
+# ---- 2. 隐藏导入 (修正了列表逗号) ----
 hiddenimports = [
-    "edge_tts",
-    "aiohttp",
-    "asyncio",
-    "pygame",
-    "certifi",
+    "edge_tts", 
+    "aiohttp", 
+    "asyncio", 
+    "pygame", 
+    "certifi", 
     "chardet",
     "pkg_resources",
     "jaraco",
@@ -39,13 +38,15 @@ hiddenimports = [
     "jaraco.collections",
     "jaraco.classes",
     "appdirs",
-    "platformdirs",
+    "platformdirs"
 ]
 
-# 只在 Windows 平台添加 baidu_aip
 if sys.platform == "win32":
     hiddenimports.append("baidu_aip")
+elif sys.platform == "darwin":
+    hiddenimports.extend(["tkinter", "_tkinter"])
 
+# ---- 3. 执行分析 ----
 a = Analysis(
     ['main_desktop.py'],
     pathex=[],
@@ -61,28 +62,28 @@ a = Analysis(
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
-# ---- Windows 用 EXE ----
-exe = EXE(
-    pyz,
-    a.scripts,
-    [],
-    exclude_binaries=True,
-    name='MandarinTTS',
-    console=False,
-)
+# ---- 4. 平台特定逻辑：Windows 做该做的事情，Mac 做该做的事情 ----
 
-# ---- macOS 用 BUNDLE(生成 .app)----
 if sys.platform == "darwin":
-    app = BUNDLE(
-        exe,
-        name='MandarinTTS.app',
-        icon=None,
-        bundle_identifier=None,
+    # --- macOS 流程 ---
+    exe = EXE(
+        pyz,
+        a.scripts,
+        [],
+        exclude_binaries=True,
+        name='MandarinTTS',
+        debug=False,
+        bootloader_ignore_signals=False,
+        strip=False,
+        upx=True,
+        console=False,
+        disable_windowed_traceback=False,
+        argv_emulation=True,
+        target_arch=None,
+        codesign_identity=None,
+        entitlements_file=None,
     )
 
-# ---- COLLECT ----
-if sys.platform == "darwin":
-    # macOS: 收集到 app 内部
     coll = COLLECT(
         exe,
         a.binaries,
@@ -90,10 +91,42 @@ if sys.platform == "darwin":
         a.datas,
         strip=False,
         upx=True,
+        upx_exclude=[],
         name='MandarinTTS',
     )
+
+    app = BUNDLE(
+        coll,
+        name='MandarinTTS.app',
+        icon=None,
+        bundle_identifier='com.mandarintts.app',
+        version='1.0.0',
+        info_plist={
+            'CFBundleName': 'MandarinTTS',
+            'CFBundleDisplayName': 'Mandarin TTS',
+            'CFBundleShortVersionString': '1.0.0',
+            'CFBundleVersion': '1.0.0',
+            'NSPrincipalClass': 'NSApplication',
+            'NSHighResolutionCapable': 'True',
+            'LSMinimumSystemVersion': '10.13.0',
+        },
+    )
+
 else:
-    # Windows: 正常收集
+    # --- Windows 流程 ---
+    exe = EXE(
+        pyz,
+        a.scripts,
+        [],
+        exclude_binaries=True,
+        name='MandarinTTS',
+        console=False,
+        debug=False,
+        bootloader_ignore_signals=False,
+        strip=False,
+        upx=True,
+    )
+
     coll = COLLECT(
         exe,
         a.binaries,
