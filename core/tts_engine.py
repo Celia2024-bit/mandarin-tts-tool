@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 import os
+import sys
 import re
 import hashlib
 import asyncio
@@ -27,11 +28,17 @@ class TTSEngine:
     Manages text splitting, caching, and audio generation.
     """
     def __init__(self, audio_dir=AUDIO_DIR, clear_cache_on_start=True):
-        self._audio_dir = audio_dir
-        
-        # Ensure the cache directory exists
-        os.makedirs(self._audio_dir, exist_ok=True)
-        
+        if getattr(sys, 'frozen', False):
+            # 打包后的环境：建议指向用户库或文档目录
+            user_data_dir = os.path.expanduser("~/Library/Application Support/MandarinTTS")
+            self._audio_dir = os.path.join(user_data_dir, AUDIO_DIR)
+        else:
+            # 开发环境：使用当前目录
+            self._audio_dir = AUDIO_DIR
+
+        if not os.path.exists(self._audio_dir):
+            os.makedirs(self._audio_dir, exist_ok=True)
+ 
         # Clear cache on initialization if requested
         if clear_cache_on_start:
             self._clear_cache()
