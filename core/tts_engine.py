@@ -10,11 +10,14 @@ import shutil
 
 # --- Configuration and Globals ---
 VOICE_DICT = {
-    "Mandarin Female (Xiaoyi)": "zh-CN-XiaoyiNeural",
-    "Mandarin Female (Xiaoxiao)": "zh-CN-XiaoxiaoNeural",
-    "Mandarin Female (Yunxi)": "zh-CN-YunxiNeural",
-    "Mandarin Male (Yunjian)": "zh-CN-YunjianNeural",
-    "Mandarin Male (YunyangNeural)": "zh-CN-YunyangNeural",
+    "Mandarin Female (Xiaoyi)": "zh-CN-XiaoyiNeural",  # Cartoon, Novel
+    "Mandarin Female (Xiaoxiao)": "zh-CN-XiaoxiaoNeural",  # News, Novel
+    "Mandarin Male (Yunxi)": "zh-CN-YunxiNeural",  # Novel
+    "Mandarin Male (Yunjian)": "zh-CN-YunjianNeural",  # Sports, Novel
+    "Mandarin Male (Yunxia)": "zh-CN-YunxiaNeural",  # Cartoon, Novel
+    "Mandarin Male (Yunyang)": "zh-CN-YunyangNeural",  # News
+    "Northeast Mandarin Female (Xiaobei)": "zh-CN-liaoning-XiaobeiNeural",  # Dialect
+    "Shaanxi Mandarin Female (Xiaoni)": "zh-CN-shaanxi-XiaoniNeural",  # Dialect
 }
 
 AUDIO_DIR = "audio_cache"
