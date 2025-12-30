@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mandarin TTS Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <main class="main">
+            <!-- 顶部：语音+速度+播放控制 -->
+            <div class="top-controls">
+                <div class="card">
+                    <div class="card__content">
+                        <div class="form-group form-group--voice-speed">
+                            <!-- 语音选择 -->
+                            <div class="form-item form-item--voice">
+                                <label for="voice-select" class="form-item__label">Voice</label>
+                                <div class="form-item__control">
+                                    <select id="voice-select" class="select">
+                                        <option value="Mandarin Female (Xiaoyi)">Mandarin Female (Xiaoyi)</option>
+                                        <option value="Mandarin Female (Xiaoxiao)">Mandarin Female (Xiaoxiao)</option>
+                                        <option value="Mandarin Male (Yunxi)">Mandarin Male (Yunxi)</option>
+                                        <option value="Mandarin Male (Yunjian)">Mandarin Male (Yunjian)</option>
+                                        <option value="Mandarin Male (Yunxia)">Mandarin Male (Yunxia)</option>
+                                        <option value="Mandarin Male (Yunyang)">Mandarin Male (Yunyang)</option>
+                                        <option value="Northeast Mandarin Female (Xiaobei)">Northeast Mandarin Female (Xiaobei)</option>
+                                        <option value="Shaanxi Mandarin Female (Xiaoni)">Shaanxi Mandarin Female (Xiaoni)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- 语速控制 -->
+                            <div class="form-item form-item--speed">
+                                <label for="speed-percent" class="form-item__label">Speed</label>
+                                <div class="form-item__control form-item__control--speed">
+                                    <input type="range" id="speed-percent" min="-50" max="100" value="0" class="range">
+                                    <span id="speed-value" class="speed-value">0%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 播放控制按钮 -->
+                        <div class="btn-group btn-group--play">
+                            <button id="play-btn" class="btn btn--play">
+                                <i class="fa fa-play"></i> Play
+                            </button>
+                            <button id="pause-btn" class="btn btn--pause">
+                                <i class="fa fa-pause"></i> Pause
+                            </button>
+                            <button id="stop-btn" class="btn btn--stop">
+                                <i class="fa fa-stop"></i> Stop
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 模式+重复控制 -->
+                <div class="card">
+                    <div class="card__content">
+                        <div class="form-group form-group--mode-repeat">
+                            <!-- 模式选择 -->
+                            <div class="form-item form-item--mode">
+                                <label class="form-item__label">Mode</label>
+                                <div class="form-item__control form-item__control--mode">
+                                    <button id="single-mode" class="btn btn--mode btn--mode-active">Single</button>
+                                    <button id="full-mode" class="btn btn--mode">Full</button>
+                                </div>
+                            </div>
+
+                            <!-- 重复次数 -->
+                            <div class="form-item form-item--repeat">
+                                <label for="repeat-count" class="form-item__label">Repeat</label>
+                                <div class="form-item__control form-item__control--repeat">
+                                    <button id="repeat-minus" class="btn btn--repeat">(-)</button>
+                                    <input type="number" id="repeat-count" min="1" max="99" value="1" class="input input--small">
+                                    <button id="repeat-plus" class="btn btn--repeat">(+)</button>
+                                    <button id="loop-btn" class="btn btn--loop ml-2">
+                                        <i class="fa fa-repeat"></i> Loop
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 循环间隔 -->
+                            <div class="form-item form-item--interval">
+                                <label for="loop-interval" class="form-item__label">Loop Interval (ms)</label>
+                                <div class="form-item__control">
+                                    <input type="number" id="loop-interval" min="100" max="5000" value="500" class="input">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 中部：Input文本区 + Sentence List -->
+            <div class="bottom-content">
+                <!-- 左侧：Input文本区 -->
+                <div class="input-area">
+                    <div class="card">
+                        <div class="card__content">
+                            <div class="text-input-group">
+                                <div class="text-input-group__header">
+                                    <label for="input-text" class="text-input-group__label">Input Chinese Text</label>
+                                    <span id="status-display" class="status-display status-display--success">Status: Ready</span>
+                                </div>
+                                <textarea id="input-text" rows="12" placeholder="请输入中文文本..." class="text-input">这是一个高质量的普通话TTS工具,支持全文朗读和单句播放功能。用户可以输入任意中文文本,点击处理按钮即可完成断句和音频生成。切换不同的发音人后,需要重新生成音频才能生效。支持重复播放、无限循环和自定义播放间隔,操作简单易用。</textarea>
+                                <div class="text-input-group__footer">
+                                    <button id="process-btn" class="btn btn--process">
+                                        <i class="fa fa-cog"></i> Process Text & Generate Audio
+                                    </button>
+                                    <button id="clear-btn" class="btn btn--clear">
+                                        <i class="fa fa-trash"></i> Clear Text
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧：Sentence List -->
+                <div class="sentence-area">
+                    <div class="card card--sentence-list">
+                        <div class="card__header">
+                            <h3 class="card__title">
+                                <i class="fa fa-list-ul text-blue-600"></i> Sentence List (Click to play)
+                            </h3>
+                        </div>
+                        <div class="card__content">
+                            <div id="sentence-list" class="sentence-list">
+                                <div class="sentence-list__empty">
+                                    点击"Process Text"生成句子列表
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card__footer">
+                            <button id="batch-generate-btn" class="btn btn--pregenerate">
+                                <i class="fa fa-batch"></i> Pre-generate All Sentences
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部：OCR功能区 -->
+            <div class="ocr-area">
+                <div class="card">
+                    <div class="card__header">
+                        <h3 class="card__title">
+                            <i class="fa fa-file-image-o text-green-600"></i> Select Image for OCR
+                        </h3>
+                    </div>
+                    <div class="card__content">
+                        <div class="ocr-upload">
+                            <label for="ocr-image" class="ocr-upload__label">
+                                <input type="file" id="ocr-image" accept="image/*" class="ocr-upload__input hidden">
+                                <i class="fa fa-upload text-1xl text-gray-400 mb-1 block ocr-upload__icon"></i>
+                                <p class="ocr-upload__text">点击/拖拽图片</p>
+                                <p class="ocr-upload__hint">支持JPG/PNG/GIF</p>
+                            </label>
+                            <div id="ocr-preview" class="ocr-preview hidden">
+                                <img id="preview-image" src="" alt="预览图片" class="ocr-preview__image">
+                                <button id="ocr-process-btn" class="btn btn--process w-full mt-2">
+                                    <i class="fa fa-magic"></i> Perform OCR
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 音频播放器（隐藏） -->
+        <audio id="audio-player" preload="none" class="audio-player">
+            <source id="audio-source" src="" type="audio/mpeg">
+            您的浏览器不支持音频播放
+        </audio>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
