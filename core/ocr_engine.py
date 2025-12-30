@@ -13,26 +13,12 @@ BAIDU_OCR_CONFIG = {
 # --- Platform-aware Import and Error Handling for Baidu SDK ---
 BAIDU_OCR_AVAILABLE = False
 
-if sys.platform == "win32":
-    # 只在 Windows 平台尝试导入
-    try:
-        from aip import AipOcr
-        BAIDU_OCR_AVAILABLE = True
-    except ImportError:
-        # Windows 上 baidu-aip 未安装
-        class AipOcr:
-            def __init__(self, *args, **kwargs):
-                pass
-            def basicGeneral(self, *args, **kwargs):
-                return {"error_msg": "Baidu OCR SDK (aip) not installed. Please run 'pip install baidu-aip'."}
-else:
-    # macOS/Linux: 直接定义 dummy class
-    class AipOcr:
-        def __init__(self, *args, **kwargs):
-            pass
-        def basicGeneral(self, *args, **kwargs):
-            return {"error_msg": f"Baidu OCR is only supported on Windows. Current platform: {sys.platform}"}
 
+try:
+    from aip import AipOcr
+    BAIDU_OCR_AVAILABLE = True
+except ImportError:
+    BAIDU_OCR_AVAILABLE = False
 
 class OCREngine:
     """
