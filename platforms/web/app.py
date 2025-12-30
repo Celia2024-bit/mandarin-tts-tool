@@ -6,9 +6,12 @@ import sys
 import tempfile
 from pathlib import Path
 
+root_path = str(Path(__file__).resolve().parents[2])
+sys.path.append(root_path)
+
 # 导入您提供的OCR和TTS引擎
-from ocr_engine import OCREngine
-from tts_engine import TTSEngine, VOICE_DICT
+from core.ocr_engine import OCREngine
+from core.tts_engine import TTSEngine, VOICE_DICT
 
 app = Flask(__name__)
 CORS(app)  # 解决跨域问题
